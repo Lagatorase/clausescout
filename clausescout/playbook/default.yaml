@@ -1,0 +1,107 @@
+# The default ClauseScout playbook: risk flags over the extracted clauses.
+#
+# Each rule has an id, a severity (high, medium or low), a short title, an explanation a lawyer
+# can act on, and one condition:
+#   present: <clause type>            the clause type was found
+#   absent: <clause type>             the clause type was not found
+#   quote_matches / quote_lacks:      {type: <clause type>, pattern: <regex>} on the found quotes
+#   text_matches / text_lacks: <regex>  on the whole contract text, for things CUAD doesn't label
+# Patterns are case-insensitive. A firm can copy this file and change any rule.
+
+rules:
+  - id: uncapped-liability
+    severity: high
+    title: Liability is uncapped
+    condition: {present: Uncapped Liability}
+    explanation: >-
+      A party's liability is uncapped for at least some breaches. Check which party, and for
+      which breaches (often IP infringement, confidentiality or indemnities).
+
+  - id: no-liability-cap
+    severity: high
+    title: No liability cap found
+    condition: {absent: Cap On Liability}
+    explanation: >-
+      No clause limiting liability was found, so damages may be unlimited. Confirm by reading
+      the limitation of liability section, if there is one.
+
+  - id: termination-for-convenience
+    severity: medium
+    title: Termination for convenience
+    condition: {present: Termination For Convenience}
+    explanation: >-
+      A party can end the contract without cause. Check whether the counterparty holds this
+      right and how much notice it must give.
+
+  - id: exclusivity-no-end
+    severity: high
+    title: Exclusivity with no end date found
+    condition:
+      quote_lacks: {type: Exclusivity, pattern: "\\b(years?|months?|days?|term|expir|until|period|terminat)"}
+    explanation: >-
+      The exclusivity clause does not mention a duration. It may last for the life of the
+      contract or longer; confirm how it ends.
+
+  - id: non-compete-no-end
+    severity: high
+    title: Non-compete with no end date found
+    condition:
+      quote_lacks: {type: Non-Compete, pattern: "\\b(years?|months?|days?|term|expir|until|period|terminat)"}
+    explanation: >-
+      The non-compete does not mention a duration. Unlimited restraints may be unenforceable and
+      are a diligence concern either way.
+
+  - id: change-of-control-termination
+    severity: high
+    title: Change of control can trigger termination
+    condition:
+      quote_matches: {type: Change Of Control, pattern: "terminat"}
+    explanation: >-
+      A change of control (such as the acquisition being reviewed) lets a party terminate.
+      Consent or a waiver may be needed before closing.
+
+  - id: assignment-restricted
+    severity: medium
+    title: Assignment restricted
+    condition: {present: Anti-Assignment}
+    explanation: >-
+      Assigning the contract needs consent or notice. Check whether a merger or asset transfer
+      counts as an assignment.
+
+  - id: governing-law-not-singapore
+    severity: medium
+    title: Governing law is not Singapore
+    condition:
+      quote_lacks: {type: Governing Law, pattern: "singapore"}
+    explanation: >-
+      The contract is governed by a foreign law. Local advice may be needed on enforceability.
+
+  - id: no-governing-law
+    severity: medium
+    title: No governing law clause found
+    condition: {absent: Governing Law}
+    explanation: >-
+      No governing law clause was found, so the applicable law would have to be argued.
+
+  - id: no-arbitration
+    severity: medium
+    title: Disputes are not resolved by arbitration
+    condition: {text_lacks: "arbitrat"}
+    explanation: >-
+      The contract never mentions arbitration, so disputes would go to court. SIAC arbitration is
+      the firm's preferred forum. (CUAD has no label for this, so this flag is unmeasured.)
+
+  - id: arbitration-not-siac
+    severity: low
+    title: Arbitration, but not SIAC
+    condition: {all: [{text_matches: "arbitrat"}, {text_lacks: "\\bSIAC\\b|Singapore International Arbitration Centre"}]}
+    explanation: >-
+      Disputes go to arbitration under rules other than SIAC. (Unmeasured: no CUAD label.)
+
+  - id: no-data-protection
+    severity: medium
+    title: No data protection clause found
+    condition: {text_lacks: "personal data|data protection|PDPA|privacy"}
+    explanation: >-
+      The contract never mentions personal data or data protection. If personal data is
+      shared, PDPA obligations should be addressed. (Unmeasured: no CUAD label.)
