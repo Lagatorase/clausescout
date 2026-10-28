@@ -16,7 +16,7 @@ def test_normalise_only_touches_whitespace_and_quotes():
     assert normalise("  a\n\tb  c ") == "a b c"
     assert normalise("“X” and ‘y’") == "\"X\" and 'y'"
     # Dashes, case and punctuation are left alone.
-    assert normalise("Non—Compete, LLC") == "Non—Compete, LLC"
+    assert normalise("Non\u2014Compete, LLC") == "Non\u2014Compete, LLC"
 
 
 def test_exact_quote_is_found_with_original_offsets():
