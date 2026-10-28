@@ -24,12 +24,10 @@ from clausescout.metrics.contract import contract_metrics
 from clausescout.metrics.span import gold_from_contracts, span_metrics
 
 
-def hardware() -> dict:
-    """What the run used, so time per contract can be read in context."""
-    info = {"platform": platform.platform(), "cpu": platform.processor(), "ram_gb": None,
-            "gpu": None}
+def memory_gb() -> tuple[float | None, float | None]:
+    """Total and free system RAM in GB, or None where I can't read it."""
     if os.name == "nt":
-        # GlobalMemoryStatusEx is the simplest way to read total RAM on Windows without psutil.
+        # GlobalMemoryStatusEx is the simplest way to read RAM on Windows without psutil.
         class _Mem(ctypes.Structure):
             _fields_ = [("len", ctypes.c_ulong), ("load", ctypes.c_ulong),
                         ("total", ctypes.c_ulonglong), ("avail", ctypes.c_ulonglong),
@@ -39,9 +37,35 @@ def hardware() -> dict:
         m = _Mem()
         m.len = ctypes.sizeof(_Mem)
         if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m)):
-            info["ram_gb"] = round(m.total / 2**30, 1)
+            return m.total / 2**30, m.avail / 2**30
     elif hasattr(os, "sysconf"):
-        info["ram_gb"] = round(os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 2**30, 1)
+        page = os.sysconf("SC_PAGE_SIZE")
+        return (page * os.sysconf("SC_PHYS_PAGES") / 2**30,
+                page * os.sysconf("SC_AVPHYS_PAGES") / 2**30)
+    return None, None
+
+
+def wait_for_memory(min_free_gb: float, poll_s: float = 30, log=print) -> float:
+    """Waits until at least min_free_gb of RAM is free. Returns the seconds spent waiting.
+
+    A long run that pauses between contracts is better than one the system kills mid-way.
+    """
+    waited = 0.0
+    free = memory_gb()[1]
+    while free is not None and free < min_free_gb:
+        if waited == 0:
+            log(f"\n  Only {free:.1f} GB RAM free, pausing until {min_free_gb} GB is free")
+        time.sleep(poll_s)
+        waited += poll_s
+        free = memory_gb()[1]
+    return waited
+
+
+def hardware() -> dict:
+    """What the run used, so time per contract can be read in context."""
+    total = memory_gb()[0]
+    info = {"platform": platform.platform(), "cpu": platform.processor(),
+            "ram_gb": round(total, 1) if total else None, "gpu": None}
     try:
         import torch
 
@@ -103,6 +127,7 @@ def run_experiment(
     max_per_type: int | None = MAX_PER_TYPE,
     progress: bool = False,
     resume_path: str | os.PathLike | None = None,
+    min_free_gb: float | None = None,
 ) -> tuple[dict, list[Finding]]:
     """Scores one method on some contracts. Returns a JSON-ready summary and the kept findings.
 
@@ -111,7 +136,8 @@ def run_experiment(
 
     With resume_path, each contract's raw output, time and usage are appended to that file as
     soon as it finishes, and contracts already in it are not run again. A long run that gets
-    stopped then loses at most one contract.
+    stopped then loses at most one contract. With min_free_gb, the run pauses before each
+    contract until that much RAM is free; pauses are not counted in the timings.
     """
     contracts = list(contracts)
     kept_all: list[Finding] = []
@@ -124,6 +150,7 @@ def run_experiment(
                 row = json.loads(line)
                 done[row["contract_id"]] = row
     usage_extra: dict[str, float] = {}
+    paused = 0.0
     for k, c in enumerate(contracts, 1):
         if c.id in done:
             # Saved by an earlier, interrupted run: reuse its raw output, time and usage.
@@ -133,6 +160,8 @@ def run_experiment(
             for key, v in row["usage"].items():
                 usage_extra[key] = usage_extra.get(key, 0) + v
         else:
+            if min_free_gb:
+                paused += wait_for_memory(min_free_gb)
             before = dict(getattr(method, "usage", {}) or {})
             t0 = time.perf_counter()
             raw = method.extract(c.id, c.text)
@@ -170,7 +199,7 @@ def run_experiment(
             ],
         },
         "time": {"total_s": sum(seconds), "per_contract_s": sum(seconds) / max(n, 1),
-                 "max_contract_s": max(seconds, default=0.0)},
+                 "max_contract_s": max(seconds, default=0.0), "paused_for_memory_s": paused},
         "usage": usage,
         "cost_per_contract_usd": usage.get("cost_usd", 0.0) / max(n, 1),
         "hardware": hardware(),

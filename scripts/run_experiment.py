@@ -27,6 +27,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("name")
     ap.add_argument("--limit", type=int, help="only the first N contracts, for a quick check")
+    ap.add_argument("--min-free-gb", type=float, default=1.5,
+                    help="pause before a contract while less RAM than this is free")
     args = ap.parse_args()
 
     configs = {e["name"]: e for e in yaml.safe_load(CONFIG.read_text())["experiments"]}
@@ -44,6 +46,8 @@ def main() -> None:
         progress=True,
         # Full runs save each contract as they go, so an interrupted run picks up where it was.
         resume_path=None if args.limit else ROOT / "runs" / args.name / "partial.jsonl",
+        # Pause between contracts when RAM runs low, instead of letting the system stop the run.
+        min_free_gb=args.min_free_gb,
     )
     summary = {"name": args.name, "config": cfg, "split": split,
                "finished": datetime.now(UTC).isoformat(timespec="seconds"), **summary}

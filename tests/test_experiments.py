@@ -95,3 +95,15 @@ def test_capped_scoring_hides_a_correct_quote_ranked_third():
     assert law_c["found_f2"] == 0.0 and law_u["found_f2"] == 1.0
     assert capped["span"] == uncapped["span"]
     assert capped["findings_per_contract"] == 2 and uncapped["findings_per_contract"] == 3
+
+
+def test_run_pauses_while_memory_is_low(monkeypatch):
+    import clausescout.experiments as ex
+
+    # Free RAM reads low twice, then recovers; the run should wait, not fail or skip.
+    readings = iter([0.5, 0.8, 3.0])
+    monkeypatch.setattr(ex, "memory_gb", lambda: (16.0, next(readings, 3.0)))
+    monkeypatch.setattr(ex.time, "sleep", lambda s: None)
+    summary, _ = run_experiment(StubMethod(), [_contract("c1", True)], min_free_gb=1.5)
+    assert summary["time"]["paused_for_memory_s"] == 60
+    assert summary["contracts"] == 1
