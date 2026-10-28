@@ -1,0 +1,11 @@
+# What the app runs on uploaded contracts. Override the file with CLAUSESCOUT_CONFIG.
+#
+# The keyword baseline is the default because it runs anywhere with no model download. Once
+# the final method is chosen on validation, its settings go here (method, params, threshold).
+method: keywords
+params: {}
+threshold: 0.5
+playbook: clausescout/playbook/default.yaml
+# Upload limits, so one huge file can't stall the single worker.
+max_file_mb: 25
+max_files: 50
