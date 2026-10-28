@@ -1,0 +1,20 @@
+[project]
+name = "clausescout"
+version = "0.1.0"
+description = "A local-first, first-pass contract review assistant for due diligence, evaluated on CUAD."
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[tool.setuptools.packages.find]
+include = ["clausescout*", "api*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["web", "data", "models"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
