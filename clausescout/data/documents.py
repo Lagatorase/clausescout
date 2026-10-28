@@ -9,6 +9,7 @@ from pathlib import Path
 import docx
 import pymupdf
 
+from clausescout.data.pdf_text import pages_to_text
 from clausescout.grounding.location import Segment, paragraph_segments
 
 SUPPORTED = (".pdf", ".docx", ".txt")
@@ -31,7 +32,7 @@ def _join(blocks: list[str], kind: str) -> tuple[str, list[Segment]]:
     # I join blocks with a blank line and remember where each one sits in the full text.
     parts, segments, pos = [], [], 0
     for block in blocks:
-        if kind == "paragraph" and not block.strip():
+        if not block.strip():
             continue
         segments.append(Segment(kind, len(segments) + 1, pos, pos + len(block)))
         parts.append(block)
@@ -41,9 +42,9 @@ def _join(blocks: list[str], kind: str) -> tuple[str, list[Segment]]:
 
 def _pdf(data: bytes) -> tuple[str, list[Segment]]:
     with pymupdf.open(stream=data, filetype="pdf") as pdf:
-        # Pages keep their real numbers even when one is blank, so citations stay right.
-        pages = [page.get_text("text").strip() for page in pdf]
-    return _join(pages, "page")
+        pages = [page.get_text("text").splitlines() for page in pdf]
+    # Cleaning and joining the pages lives in pdf_text, so it can be tested without PDFs.
+    return pages_to_text(pages)
 
 
 def _docx(data: bytes) -> tuple[str, list[Segment]]:
