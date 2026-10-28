@@ -41,8 +41,8 @@ def main() -> None:
     ap.add_argument("--out", type=Path)
     ap.add_argument("--epochs", type=int, default=1)
     ap.add_argument("--lr", type=float, default=3e-5)
-    ap.add_argument("--batch", type=int, default=8)
-    ap.add_argument("--accum", type=int, default=4)
+    ap.add_argument("--batch", type=int, default=4)
+    ap.add_argument("--accum", type=int, default=8)
     ap.add_argument("--neg-ratio", type=float, default=1.0)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--save-every", type=int, default=200)
@@ -72,7 +72,11 @@ def main() -> None:
     )
 
     device = "cuda"
-    model = AutoModelForQuestionAnswering.from_pretrained(args.model).to(device)
+    # transformers 5 loads weights in the dtype they were saved in, which is fp16 for DeBERTa-v3.
+    # AdamW on fp16 weights turns them into NaN after one step, so I load fp32 master weights
+    # and use bf16 only for the forward and backward passes through autocast.
+    model = AutoModelForQuestionAnswering.from_pretrained(args.model, dtype=torch.float32)
+    model = model.to(device)
     if args.grad_checkpointing:
         model.gradient_checkpointing_enable()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)

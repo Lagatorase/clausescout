@@ -171,7 +171,9 @@ class QAExtractor:
         model_dir = Path(model_dir)
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.tok = AutoTokenizer.from_pretrained(model_dir)
-        self.model = AutoModelForQuestionAnswering.from_pretrained(model_dir).to(self.device)
+        # I load fp32 weights explicitly and run in bf16 through autocast, never in fp16.
+        self.model = AutoModelForQuestionAnswering.from_pretrained(
+            model_dir, dtype=torch.float32).to(self.device)
         self.model.eval()
         questions = json.loads((model_dir / "questions.json").read_text(encoding="utf-8"))
         if categories:

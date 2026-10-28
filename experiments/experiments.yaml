@@ -11,13 +11,13 @@ experiments:
     threshold: 0.5
 
   # Fine-tuned extractive QA, as in the CUAD paper. Trained with scripts/train_qa.py on the
-  # train split only. Timing run: 1.15 s per step (8x4 windows), 811 steps per epoch.
+  # train split only. Timing run: 2.08 s per step (4x8 windows), 811 steps, about 28 min.
   - name: qa-small-e1-s0
     method: qa
     split: val
     threshold: 0.5
     params: {model_dir: models/qa-small-e1-s0}
-    train: "--model microsoft/deberta-v3-small --epochs 1 --lr 3e-5 --batch 8 --accum 4 --seed 0"
+    train: "--model microsoft/deberta-v3-small --epochs 1 --lr 3e-5 --batch 4 --accum 8 --seed 0"
 
   # Local LLM via Ollama. Prompts live in clausescout/llm/prompts/<version>.md, one file per
   # version, and every version is tuned on validation only.
