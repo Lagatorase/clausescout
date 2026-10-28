@@ -142,8 +142,12 @@ def main() -> None:
                       f"({rate * (total - step) / 60:.0f} min left)", flush=True)
             if step % args.save_every == 0 or step == total:
                 args.out.mkdir(parents=True, exist_ok=True)
+                # I write to a temporary file and then rename it, so a run killed mid-save
+                # leaves the previous checkpoint intact instead of a truncated one.
+                tmp = ckpt.with_suffix(".tmp")
                 torch.save({"model": model.state_dict(), "opt": opt.state_dict(),
-                            "sched": sched.state_dict(), "step": step}, ckpt)
+                            "sched": sched.state_dict(), "step": step}, tmp)
+                tmp.replace(ckpt)
 
     # Save the final model in the usual Hugging Face layout, with the questions it was trained on.
     model.save_pretrained(args.out)
