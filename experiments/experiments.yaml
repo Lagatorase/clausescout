@@ -19,11 +19,32 @@ experiments:
     params: {model_dir: models/qa-small-e1-s0}
     train: "--model microsoft/deberta-v3-small --epochs 1 --lr 3e-5 --batch 4 --accum 8 --seed 0"
 
+  # One change from qa-small-e1-s0: 4 epochs, as in the CUAD paper.
+  - name: qa-small-e4-s0
+    method: qa
+    split: val
+    threshold: 0.5
+    params: {model_dir: models/qa-small-e4-s0}
+    train: "--model microsoft/deberta-v3-small --epochs 4 --lr 3e-5 --batch 4 --accum 8 --seed 0"
+
   # Local LLM via Ollama. Prompts live in clausescout/llm/prompts/<version>.md, one file per
   # version, and every version is tuned on validation only.
   - name: llm-qwen7b-v1
     method: llm
     split: val
     threshold: 0.5
-    params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 8192, prompt_version: v1,
+    # num_ctx is the smallest window that fits the prompt, one chunk and the answer, to keep
+    # memory down (8192 at first; the first attempt was stopped for low memory).
+    params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 6144, prompt_version: v1,
              chunk_chars: 12000, overlap_chars: 1500}
+
+  # The local LLM confirms or rejects QA candidates (QA probability at least 0.05) from the
+  # better QA run on validation, whichever that turns out to be. Batches of
+  # 8 passages of up to 1,500 characters keep each request about the size of one LLM chunk.
+  - name: hybrid-qwen7b-v1
+    method: hybrid
+    split: val
+    threshold: 0.5
+    params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 6144, prompt_version: hybrid-v1,
+             candidates: runs/qa-small-e4-s0/findings.jsonl, min_prob: 0.05, batch: 8,
+             max_passage_chars: 1500}
