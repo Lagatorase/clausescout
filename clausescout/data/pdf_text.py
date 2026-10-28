@@ -113,7 +113,8 @@ def remove_running_lines(pages: list[list[str]]) -> list[list[str]]:
 
 _LINE_END_HYPHEN = re.compile(r"(\w+)([-\u00ad])$")
 SOFT_HYPHEN = "\u00ad"
-_LINE_START_WORD = re.compile(r"(\w+)(.*)$", re.DOTALL)
+# The word that continues the hyphen, anything attached to it (",", "'s", ")"), then the rest.
+_LINE_START_WORD = re.compile(r"(\w+)(\S*)(.*)$", re.DOTALL)
 _LETTERS = r"[^\W\d_]+"
 
 
@@ -124,7 +125,8 @@ def rejoin_hyphenated(pages: list[list[str]]) -> list[list[str]]:
     compound ("non-" + "exclusive"), and dropping it in the second case would change the
     wording. So I check the document itself: if the joined word appears elsewhere without a
     hyphen and the hyphenated form doesn't, I drop the hyphen. Otherwise I keep it and only
-    remove the line break. I move just the word fragment up, so page boundaries barely shift.
+    remove the line break. I move up just the rest of the word, with any punctuation attached
+    to it, so page boundaries barely shift and no stray space lands before a comma.
     """
     pages = [list(lines) for lines in pages]
     text = "\n".join(line for lines in pages for line in lines)
@@ -144,14 +146,14 @@ def rejoin_hyphenated(pages: list[list[str]]) -> list[list[str]]:
         n = _LINE_START_WORD.match(pages[q][j].lstrip())
         if not n:
             continue
-        left, frag, rest = m.group(1), n.group(1), n.group(2)
+        left, frag, tail, rest = m.group(1), n.group(1), n.group(2), n.group(3)
         joined = (left + frag).lower()
         is_break = (left + frag).isalpha() and joined in words
         # A soft hyphen only ever marks a line break, so it always goes.
         if m.group(2) == SOFT_HYPHEN or (is_break and f"{left}-{frag}".lower() not in compounds):
-            pages[p][i] = line[:-1] + frag
+            pages[p][i] = line[:-1] + frag + tail
         else:
-            pages[p][i] = line + frag
+            pages[p][i] = line + frag + tail
         pages[q][j] = rest.lstrip()
     return pages
 

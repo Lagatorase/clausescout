@@ -148,3 +148,11 @@ def test_synthetic_pdf_with_header_hyphen_ligature_and_page_split(tmp_path):
     assert locate(doc.segments, *hit).label == "pp. 1-2"
     assert doc.text.count(header) == 1
     assert lig not in doc.text
+
+
+def test_punctuation_attached_to_the_continued_word_moves_with_it():
+    pages = [["a non-exclusive, non-", "transferable, worldwide licence and third-",
+              "party's rights"]]
+    out = rejoin_hyphenated(pages)[0]
+    assert out == ["a non-exclusive, non-transferable,", "worldwide licence and third-party's",
+                   "rights"]
