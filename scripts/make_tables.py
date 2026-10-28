@@ -85,7 +85,7 @@ def main() -> None:
 
     lines += ["", "## Grounding, time and cost", "",
               "| Method | Spans returned | Rejected as not verbatim | Rejection rate "
-              "| Seconds per contract | Cost per contract (USD) | Hardware |",
+              "| Seconds per contract | Cost per contract (USD) | Machine (GPU if present) |",
               "|---|---:|---:|---:|---:|---:|---|"]
     for r in results:
         # Reference rows like always-present have no grounding or timing to report.
