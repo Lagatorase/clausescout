@@ -117,3 +117,13 @@ def test_bootstrap_interval_contains_point_estimate():
     # The high-stakes mean gets its own interval, which the selection rule compares.
     lo, hi = m.high_stakes_ci["f2"]
     assert lo <= m.high_stakes["f2"] <= hi
+
+
+def test_found_f2_needs_a_correct_quote():
+    gold = {("A", GL): ["governed by the laws of New York"], ("B", GL): []}
+    right = {("A", GL): [("governed by the laws of New York", 0.9)]}
+    wrong = {("A", GL): [("something else entirely", 0.9)], ("B", GL): [("x", 0.9)]}
+    assert contract_metrics(gold, right).per_category[GL].found_f2 == 1.0
+    m = contract_metrics(gold, wrong).per_category[GL]
+    # Presence recall is perfect but nothing is quoted correctly.
+    assert m.recall == 1.0 and m.found_f2 == 0.0

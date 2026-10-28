@@ -54,10 +54,11 @@ def main() -> None:
 
     lines += ["", "## Contract level (is the clause there, and did we quote it)", "",
               "Micro scores pool every (contract, clause type) pair. High-stakes columns average "
-              "the eight high-stakes types. Found = clause present and a correct span quoted.", "",
+              "the eight high-stakes types. Found = clause present and a correct span quoted. "
+              "Found F2 = F2 where a yes only counts as a hit with a correct quote.", "",
               "| Method | Threshold | Precision | Recall | F1 | Macro F1 | High-stakes recall "
-              "| High-stakes F2 | High-stakes found |",
-              "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
+              "| High-stakes F2 | High-stakes found | High-stakes found F2 |",
+              "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for r in results:
         m, h = r["contract"]["micro"], r["contract"]["high_stakes"]
         p, rc, f1 = (with_ci(m[k], m.get("ci"), k) for k in ("precision", "recall", "f1"))
@@ -65,7 +66,8 @@ def main() -> None:
         lines.append(f"| {r['name']} | {r['threshold']} | {p} | {rc} | {f1} | "
                      f"{fmt(r['contract']['macro']['f1'])} | {with_ci(h['recall'], hci, 'recall')} "
                      f"| {with_ci(h['f2'], hci, 'f2')} "
-                     f"| {with_ci(h['found_recall'], hci, 'found_recall')} |")
+                     f"| {with_ci(h['found_recall'], hci, 'found_recall')} "
+                     f"| {with_ci(h.get('found_f2'), hci, 'found_f2')} |")
 
     if results:
         lines += ["", "## High-stakes clause types", "",

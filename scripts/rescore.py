@@ -42,15 +42,15 @@ def main() -> None:
     sweep = []
     if args.threshold is None:
         gold, preds = gold_from_contracts(contracts, CATEGORIES), to_preds(findings)
-        print("threshold  hs-F2  hs-recall  hs-precision  micro-F1")
+        print("threshold  hs-F2  hs-recall  hs-precision  micro-F1  hs-found-F2")
         for t in GRID:
             m = contract_metrics(gold, preds, threshold=t)
             h = m.high_stakes
             sweep.append({"threshold": t, "high_stakes_f2": h["f2"], "high_stakes_recall":
                           h["recall"], "high_stakes_precision": h["precision"],
-                          "micro_f1": m.micro.f1})
+                          "micro_f1": m.micro.f1, "high_stakes_found_f2": h["found_f2"]})
             print(f"{t:9.2f}  {h['f2']:.3f}  {h['recall']:9.3f}  {h['precision']:12.3f}  "
-                  f"{m.micro.f1:.3f}")
+                  f"{m.micro.f1:.3f}  {h['found_f2']:.3f}")
         # Ties go to the higher threshold, which gives the reader fewer findings to check.
         best = max(sweep, key=lambda r: (round(r["high_stakes_f2"], 6), r["threshold"]))
         threshold = best["threshold"]

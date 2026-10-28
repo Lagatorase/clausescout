@@ -7,7 +7,8 @@ pair once instead of each span:
   missed clause hurts more than an extra one to read) follow from that.
 - Span correctness: for true positives, did at least one kept prediction match a gold span
   under CUAD's Jaccard rule. found_recall combines both: the share of contracts with the
-  clause where we flagged it and quoted it correctly.
+  clause where we flagged it and quoted it correctly. found_f2 is F2 where a "yes" only counts
+  as a hit when it comes with a correct quote, so saying yes to everything can't score well.
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ import numpy as np
 from clausescout.data.cuad import HIGH_STAKES
 from clausescout.metrics.span import Gold, Preds, is_match
 
-METRICS = ("precision", "recall", "f1", "f2", "span_correct", "found_recall")
+METRICS = ("precision", "recall", "f1", "f2", "span_correct", "found_recall", "found_f2")
 
 
 @dataclass
@@ -37,6 +38,7 @@ class PresenceScores:
     f2: float
     span_correct: float
     found_recall: float
+    found_f2: float
     ci: dict[str, tuple[float, float]] = field(default_factory=dict)
 
 
@@ -66,6 +68,8 @@ def _from_counts(tp, fp, fn, tn, correct) -> tuple[float, ...]:
         _ratio(5 * tp, 5 * tp + 4 * fn + fp),
         _ratio(correct, tp),
         _ratio(correct, tp + fn),
+        # Gold clauses without a correct quote count as misses, other "yes" answers as false alarms.
+        _ratio(5 * correct, 5 * correct + 4 * (tp + fn - correct) + (tp + fp - correct)),
     )
 
 
