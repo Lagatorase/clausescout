@@ -70,7 +70,7 @@ class HybridExtractor:
         self.schema = hybrid_schema(list(CATEGORIES))
         self.min_prob, self.batch, self.max_chars = min_prob, batch, max_passage_chars
         self.usage = {"input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "calls": 0,
-                      "bad_json": 0, "passages": 0}
+                      "bad_json": 0, "passages": 0, "context_full": 0}
 
     def _candidates(self, contract_id: str, text: str) -> list[Finding]:
         if self._qa is not None:
@@ -85,7 +85,7 @@ class HybridExtractor:
             lines.append(f"[{i}] (suggested: {', '.join(suggested)})\n{text[:self.max_chars]}")
         reply, usage = with_retries(
             lambda: self.client.chat(self.system, "\n\n".join(lines), self.schema))
-        for k in ("input_tokens", "output_tokens", "cost_usd"):
+        for k in ("input_tokens", "output_tokens", "cost_usd", "context_full"):
             self.usage[k] += usage.get(k, 0)
         self.usage["calls"] += 1
         try:

@@ -64,3 +64,29 @@ def test_hosted_backends_need_explicit_permission(monkeypatch):
     monkeypatch.setenv("ALLOW_HOSTED_LLM", "false")
     with pytest.raises(RuntimeError, match="ALLOW_HOSTED_LLM"):
         build_client("anthropic")
+
+
+def test_ollama_client_counts_replies_that_fill_the_context(monkeypatch):
+    import httpx
+
+    from clausescout.llm.client import OllamaClient
+
+    class Reply:
+        def __init__(self, n_in, n_out):
+            self.data = {"message": {"content": "{}"}, "prompt_eval_count": n_in,
+                         "eval_count": n_out}
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return self.data
+
+    sent = []
+    replies = iter([Reply(3000, 500), Reply(5800, 344)])
+    monkeypatch.setattr(httpx, "post",
+                        lambda url, json, timeout: sent.append(json) or next(replies))
+    client = OllamaClient(model="m", host="http://x", num_ctx=6144)
+    assert client.chat("s", "u")[1]["context_full"] == 0
+    assert client.chat("s", "u")[1]["context_full"] == 1
+    assert sent[0]["options"]["num_ctx"] == 6144

@@ -41,6 +41,9 @@ class OllamaClient:
         data = r.json()
         usage = {"input_tokens": data.get("prompt_eval_count", 0),
                  "output_tokens": data.get("eval_count", 0), "cost_usd": 0.0}
+        # The context window is kept small to save memory, so I count any request that filled
+        # it: its input may have been cut or its answer stopped early.
+        usage["context_full"] = int(usage["input_tokens"] + usage["output_tokens"] >= self.num_ctx)
         return data["message"]["content"], usage
 
 

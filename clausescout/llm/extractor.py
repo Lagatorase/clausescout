@@ -83,11 +83,11 @@ class LLMExtractor:
         self.schema = response_schema(self.categories)
         self.chunk_chars, self.overlap_chars = chunk_chars, overlap_chars
         self.usage = {"input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "calls": 0,
-                      "bad_json": 0, "unknown_type": 0}
+                      "bad_json": 0, "unknown_type": 0, "context_full": 0}
 
     def _ask(self, excerpt: str) -> list[dict]:
         text, usage = with_retries(lambda: self.client.chat(self.system, excerpt, self.schema))
-        for k in ("input_tokens", "output_tokens", "cost_usd"):
+        for k in ("input_tokens", "output_tokens", "cost_usd", "context_full"):
             self.usage[k] += usage.get(k, 0)
         self.usage["calls"] += 1
         try:
