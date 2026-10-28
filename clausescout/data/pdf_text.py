@@ -99,9 +99,52 @@ def remove_running_lines(pages: list[list[str]]) -> list[list[str]]:
     return cleaned
 
 
+_LINE_END_HYPHEN = re.compile(r"(\w+)-$")
+_LINE_START_WORD = re.compile(r"(\w+)(.*)$", re.DOTALL)
+_LETTERS = r"[^\W\d_]+"
+
+
+def rejoin_hyphenated(pages: list[list[str]]) -> list[list[str]]:
+    """Joins words split by a hyphen at the end of a line, including across page breaks.
+
+    A line-end hyphen is either a typesetter's break ("con-" + "tract") or a real hyphen in a
+    compound ("non-" + "exclusive"), and dropping it in the second case would change the
+    wording. So I check the document itself: if the joined word appears elsewhere without a
+    hyphen and the hyphenated form doesn't, I drop the hyphen. Otherwise I keep it and only
+    remove the line break. I move just the word fragment up, so page boundaries barely shift.
+    """
+    pages = [list(lines) for lines in pages]
+    text = "\n".join(line for lines in pages for line in lines)
+    words = {w.lower() for w in re.findall(_LETTERS, text)}
+    compounds = {w.lower() for w in re.findall(rf"{_LETTERS}(?:-{_LETTERS})+", text)}
+    flat = [(p, i) for p, lines in enumerate(pages) for i in range(len(lines))]
+    for k, (p, i) in enumerate(flat):
+        line = pages[p][i].rstrip()
+        m = _LINE_END_HYPHEN.search(line)
+        if not m:
+            continue
+        # The continuation is the next non-empty line, which may be on the next page.
+        nxt = next(((q, j) for q, j in flat[k + 1:] if pages[q][j].strip()), None)
+        if nxt is None:
+            continue
+        q, j = nxt
+        n = _LINE_START_WORD.match(pages[q][j].lstrip())
+        if not n:
+            continue
+        left, frag, rest = m.group(1), n.group(1), n.group(2)
+        joined = (left + frag).lower()
+        is_break = (left + frag).isalpha() and joined in words
+        if is_break and f"{left}-{frag}".lower() not in compounds:
+            pages[p][i] = line[:-1] + frag
+        else:
+            pages[p][i] = line + frag
+        pages[q][j] = rest.lstrip()
+    return pages
+
+
 def pages_to_text(pages: list[list[str]]) -> tuple[str, list[Segment]]:
     """Cleans the pages and joins them into one text with a character range per page."""
-    pages = remove_running_lines(pages)
+    pages = rejoin_hyphenated(remove_running_lines(pages))
     parts, segments, pos = [], [], 0
     for number, lines in enumerate(pages, start=1):
         # Every page keeps its real number, even if cleaning left it empty.

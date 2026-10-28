@@ -3,7 +3,7 @@
 import pymupdf
 
 from clausescout.data.documents import load_document
-from clausescout.data.pdf_text import pages_to_text, remove_running_lines
+from clausescout.data.pdf_text import pages_to_text, rejoin_hyphenated, remove_running_lines
 from clausescout.grounding.location import locate
 from clausescout.grounding.verbatim import GroundingIndex
 
@@ -75,3 +75,29 @@ def test_pdf_with_running_header_grounds_a_clause_across_lines(tmp_path):
     assert doc.text.count(header) == 1
     hit = GroundingIndex(doc.text).find("Supplier shall supply the Products to Buyer.")
     assert locate(doc.segments, *hit).label == "p. 1"
+
+
+def test_typesetter_hyphen_is_dropped_when_the_word_appears_whole_elsewhere():
+    pages = [["This contract binds the parties. The con-", "tract starts today."]]
+    assert rejoin_hyphenated(pages) == [["This contract binds the parties. The contract",
+                                         "starts today."]]
+
+
+def test_compound_hyphen_is_kept_when_only_the_line_break_goes():
+    # "nonexclusive" never appears whole, so the hyphen is real and stays.
+    pages = [["Licensor grants a non-", "exclusive licence."]]
+    assert rejoin_hyphenated(pages) == [["Licensor grants a non-exclusive", "licence."]]
+    # A compound written with a hyphen elsewhere keeps it, even if the joined form exists too.
+    pages = [["a non-exclusive and nonexclusive licence; a non-", "exclusive right"]]
+    assert rejoin_hyphenated(pages)[0][0].endswith("a non-exclusive")
+
+
+def test_hyphen_break_across_a_page_keeps_the_word_on_the_first_page():
+    pages = [["The Supplier shall indem-"], ["nify the Buyer.", "Indemnify means pay."]]
+    out = rejoin_hyphenated(pages)
+    assert out == [["The Supplier shall indemnify"], ["the Buyer.", "Indemnify means pay."]]
+
+
+def test_number_ranges_and_dashes_on_their_own_are_left_alone_except_the_break():
+    pages = [["see Sections 4-", "6 below", "Signed: -", "Name"]]
+    assert rejoin_hyphenated(pages) == [["see Sections 4-6", "below", "Signed: -", "Name"]]
