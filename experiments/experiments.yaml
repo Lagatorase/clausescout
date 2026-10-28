@@ -18,3 +18,12 @@ experiments:
     threshold: 0.5
     params: {model_dir: models/qa-small-e1-s0}
     train: "--model microsoft/deberta-v3-small --epochs 1 --lr 3e-5 --batch 8 --accum 4 --seed 0"
+
+  # Local LLM via Ollama. Prompts live in clausescout/llm/prompts/<version>.md, one file per
+  # version, and every version is tuned on validation only.
+  - name: llm-qwen7b-v1
+    method: llm
+    split: val
+    threshold: 0.5
+    params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 8192, prompt_version: v1,
+             chunk_chars: 12000, overlap_chars: 1500}

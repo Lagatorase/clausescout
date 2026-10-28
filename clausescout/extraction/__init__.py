@@ -14,4 +14,12 @@ def build_method(method: str, params: dict | None = None):
         from clausescout.models.qa import QAExtractor
 
         return QAExtractor(**params)
+    if method == "llm":
+        from clausescout.llm.client import build_client
+        from clausescout.llm.extractor import LLMExtractor
+
+        # Client settings (backend, model, context size) and extractor settings share one dict.
+        client_keys = {"backend", "model", "num_ctx"}
+        client = build_client(**{k: v for k, v in params.items() if k in client_keys})
+        return LLMExtractor(client, **{k: v for k, v in params.items() if k not in client_keys})
     raise ValueError(f"Unknown method {method!r}")
