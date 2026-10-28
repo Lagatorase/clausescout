@@ -1,0 +1,14 @@
+# Run with: docker compose up --build   then open http://127.0.0.1:8000
+services:
+  app:
+    build: .
+    # Published on localhost only, so other machines on the network can't reach it.
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - CLAUSESCOUT_CONFIG=/app/config/app.yaml
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    # To use the local LLM, run Ollama on the host, set method: llm in config/app.yaml, and
+    # the container reaches it through OLLAMA_HOST.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
