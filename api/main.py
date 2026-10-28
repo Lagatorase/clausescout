@@ -150,8 +150,8 @@ def _doc_summary(d: DocumentJob) -> dict:
         r = d.result.review
         sev = [fl.rule.severity for fl in r.flags]
         found = {f.category for f in r.findings}
-        out.update(findings=len(r.findings),
-                   flags={s: sev.count(s) for s in ("high", "medium", "low")},
+        out.update(n_findings=len(r.findings),
+                   flag_counts={s: sev.count(s) for s in ("high", "medium", "low")},
                    high_stakes_found=[c for c in HIGH_STAKES if c in found])
     return out
 
