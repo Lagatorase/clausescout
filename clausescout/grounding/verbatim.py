@@ -1,30 +1,61 @@
 """The verbatim grounding check: every quoted span must really be in the contract.
 
 Invented legal text is the failure lawyers fear most, so any span a method returns has to appear
-in the contract word for word. The only differences I forgive are whitespace (line breaks,
-tabs, repeated or non-breaking spaces) and curly versus straight quotes, because text
-extraction and models change those without changing the meaning. Case, punctuation, dashes and
-spelling all have to match. Spans that fail are rejected and counted, never repaired.
+in the contract word for word. The only differences I forgive are ones that never change the
+wording:
+- whitespace: line breaks, tabs, repeated or non-breaking spaces, and a space left after a
+  hyphen by a line break ("non- exclusive" for "non-exclusive")
+- curly versus straight quotes
+- Unicode presentation forms (ligatures like U+FB01 for "fi", look-alikes like the Greek
+  question mark for a semicolon, full-width characters), via Unicode compatibility
+  normalisation, and soft hyphens, which are invisible line-break hints
+Case, punctuation, dashes and spelling all have to match. Spans that fail are rejected and
+counted, never repaired.
 """
 
 from __future__ import annotations
 
-import re
+import unicodedata
 from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 
 from clausescout.findings import Finding
 
 _QUOTES = str.maketrans({
-    "‘": "'", "’": "'", "‚": "'", "‛": "'",
-    "“": '"', "”": '"', "„": '"', "‟": '"',
+    "\u2018": "'", "\u2019": "'", "\u201a": "'", "\u201b": "'",
+    "\u201c": '"', "\u201d": '"', "\u201e": '"', "\u201f": '"',
 })
-_WS = re.compile(r"\s+")
+_SOFT_HYPHEN = "\u00ad"
+
+
+def _normalised_chars(text: str) -> list[tuple[str, int]]:
+    """Each normalised character with the index of the original character it came from.
+
+    The quote and the contract both go through this one function, so they are always
+    normalised the same way.
+    """
+    out: list[tuple[str, int]] = []
+    for i, ch in enumerate(text):
+        # NFKD per character splits ligatures and maps look-alikes, and decomposes accents the
+        # same way whether the text stored them composed or as a separate combining mark.
+        for c in unicodedata.normalize("NFKD", ch).translate(_QUOTES):
+            if c == _SOFT_HYPHEN:
+                continue
+            if c.isspace():
+                prev = out[-1][0] if out else " "
+                # One space per whitespace run, and none straight after a word's hyphen.
+                if prev == " ":
+                    continue
+                if prev == "-" and len(out) > 1 and out[-2][0].isalnum():
+                    continue
+                c = " "
+            out.append((c, i))
+    return out
 
 
 def normalise(text: str) -> str:
-    """Collapses whitespace runs to one space and straightens quotes. Nothing else changes."""
-    return _WS.sub(" ", text.translate(_QUOTES)).strip()
+    """The text as the grounding check compares it. Only the forgiven differences change."""
+    return "".join(c for c, _ in _normalised_chars(text)).strip()
 
 
 class GroundingIndex:
@@ -32,24 +63,9 @@ class GroundingIndex:
 
     def __init__(self, text: str):
         self.text = text
-        chars: list[str] = []
-        self._orig: list[int] = []  # original index of each normalised character
-        straight = text.translate(_QUOTES)
-        i = 0
-        while i < len(straight):
-            if straight[i].isspace():
-                # A whole whitespace run becomes one space that points at the run's start.
-                j = i
-                while j < len(straight) and straight[j].isspace():
-                    j += 1
-                chars.append(" ")
-                self._orig.append(i)
-                i = j
-            else:
-                chars.append(straight[i])
-                self._orig.append(i)
-                i += 1
-        self.norm = "".join(chars)
+        chars = _normalised_chars(text)
+        self.norm = "".join(c for c, _ in chars)
+        self._orig = [i for _, i in chars]
 
     def find(self, quote: str, hint: int | None = None) -> tuple[int, int] | None:
         """Original (start, end) offsets of the quote, or None if it isn't in the contract.
@@ -71,7 +87,8 @@ class GroundingIndex:
             pos = min(hits, key=lambda h: abs(self._orig[h] - hint))
         else:
             pos = hits[0]
-        # The quote never ends in a space, so its last character maps to one original character.
+        # The quote never ends in a space, and its last character came from one original
+        # character, so the span ends just after that one.
         return self._orig[pos], self._orig[pos + len(q) - 1] + 1
 
 

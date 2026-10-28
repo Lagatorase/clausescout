@@ -75,3 +75,36 @@ def test_stats_add_up_across_contracts():
     total = s1 + s2
     assert (total.submitted, total.rejected) == (2, 1)
     assert total.rejection_rate == 0.5
+
+
+def test_ligatures_look_alikes_and_soft_hyphens_are_forgiven():
+    lig, greek_q, soft = chr(0xFB01), chr(0x037E), chr(0x00AD)
+    contract = f"The {lig}rst Party shall indem{soft}nify the other{greek_q} and so on."
+    idx = GroundingIndex(contract)
+    start, end = idx.find("The first Party shall indemnify the other; and")
+    # The kept text is still the original, ligature and all.
+    assert contract[start:end] == f"The {lig}rst Party shall indem{soft}nify the other{greek_q} and"
+
+
+def test_composed_and_decomposed_accents_match_both_ways():
+    composed, decomposed = "Leclanch" + chr(0xE9), "Leclanche" + chr(0x0301)
+    assert GroundingIndex(f"between {composed} S.A.").find(f"{decomposed} S.A.") is not None
+    assert GroundingIndex(f"between {decomposed} S.A.").find(f"{composed} S.A.") is not None
+
+
+def test_space_after_a_line_break_hyphen_is_whitespace():
+    idx = GroundingIndex("grants a non-\nexclusive licence")
+    assert idx.find("a non- exclusive licence") is not None
+    assert idx.find("a non-exclusive licence") is not None
+    # A spaced dash between words is not touched, and the hyphen itself must still be there.
+    assert GroundingIndex("Sections 4 - 6").find("Sections 4 -6") is None
+    assert idx.find("a nonexclusive licence") is None
+
+
+def test_everything_else_stays_strict():
+    idx = GroundingIndex("Liability shall not exceed USD 1,000,000; see Section 9.")
+    for altered in ["liability shall not exceed USD 1,000,000",      # case
+                    "Liability shall not exceed USD 1.000.000",      # punctuation
+                    "Liability shall not exceed USD 1,000,000, see",  # semicolon to comma
+                    "Liability will not exceed USD 1,000,000"]:      # wording
+        assert idx.find(altered) is None
