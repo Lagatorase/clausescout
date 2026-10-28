@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import unicodedata
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -95,18 +96,25 @@ def load_split(name: str) -> list[Contract]:
     return [contracts[i] for i in ids if i]
 
 
+def _pdf_key(name: str) -> str:
+    # PDF filenames differ from CUAD titles in small ways: trailing spaces, decomposed accents
+    # (e followed by a combining accent) and a trailing "-". I compare a cleaned-up form.
+    return unicodedata.normalize("NFC", name).strip().rstrip("-_ ").lower()
+
+
 def pdf_path(contract_id: str) -> Path | None:
     """Finds the original PDF for a contract, if there is one."""
-    for p in _pdf_index().get(contract_id.lower(), []):
-        return p
-    return None
+    index = _pdf_index()
+    key = _pdf_key(contract_id)
+    if key in index:
+        return index[key]
+    # One PDF name has an extra suffix ("..._Option Agreement"), so I fall back to a unique
+    # prefix match, and give up rather than guess if there are several.
+    matches = [p for k, p in index.items() if k.startswith(key)]
+    return matches[0] if len(matches) == 1 else None
 
 
 @lru_cache(maxsize=1)
-def _pdf_index() -> dict[str, list[Path]]:
+def _pdf_index() -> dict[str, Path]:
     # The PDFs sit in nested folders with mixed-case extensions, so I index them once by stem.
-    index: dict[str, list[Path]] = {}
-    for p in PDF_DIR.rglob("*"):
-        if p.suffix.lower() == ".pdf":
-            index.setdefault(p.stem.lower(), []).append(p)
-    return index
+    return {_pdf_key(p.stem): p for p in PDF_DIR.rglob("*") if p.suffix.lower() == ".pdf"}
