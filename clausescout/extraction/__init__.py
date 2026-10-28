@@ -22,4 +22,16 @@ def build_method(method: str, params: dict | None = None):
         client_keys = {"backend", "model", "num_ctx"}
         client = build_client(**{k: v for k, v in params.items() if k in client_keys})
         return LLMExtractor(client, **{k: v for k, v in params.items() if k not in client_keys})
+    if method == "hybrid":
+        from clausescout.llm.client import build_client
+        from clausescout.llm.hybrid import HybridExtractor
+        from clausescout.models.qa import QAExtractor
+
+        params = dict(params)
+        client = build_client(**{k: params.pop(k) for k in ("backend", "model", "num_ctx")
+                                 if k in params})
+        # Candidates come from saved QA findings (validation runs) or a live QA model (the app).
+        if "qa_model_dir" in params:
+            params["candidates"] = QAExtractor(params.pop("qa_model_dir"))
+        return HybridExtractor(client, **params)
     raise ValueError(f"Unknown method {method!r}")
