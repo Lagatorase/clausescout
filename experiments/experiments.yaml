@@ -9,3 +9,12 @@ experiments:
     method: keywords
     split: val
     threshold: 0.5
+
+  # Fine-tuned extractive QA, as in the CUAD paper. Trained with scripts/train_qa.py on the
+  # train split only. Timing run: 1.15 s per step (8x4 windows), 811 steps per epoch.
+  - name: qa-small-e1-s0
+    method: qa
+    split: val
+    threshold: 0.5
+    params: {model_dir: models/qa-small-e1-s0}
+    train: "--model microsoft/deberta-v3-small --epochs 1 --lr 3e-5 --batch 8 --accum 4 --seed 0"

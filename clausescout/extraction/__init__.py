@@ -10,4 +10,8 @@ def build_method(method: str, params: dict | None = None):
         from clausescout.extraction.keywords import KeywordExtractor
 
         return KeywordExtractor(**params)
+    if method == "qa":
+        from clausescout.models.qa import QAExtractor
+
+        return QAExtractor(**params)
     raise ValueError(f"Unknown method {method!r}")
