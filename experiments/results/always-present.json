@@ -4,9 +4,11 @@
   "method": "always-present"
  },
  "split": "val",
- "finished": "2026-10-28T08:25:45+00:00",
+ "finished": "2026-10-28T16:00:10+00:00",
  "contracts": 62,
  "threshold": 0.5,
+ "max_per_type": 2,
+ "findings_per_contract": 41.0,
  "span": {
   "overall": {
    "aupr": 0.0,
@@ -2920,5 +2922,5 @@
  },
  "usage": {},
  "cost_per_contract_usd": 0.0,
- "git_commit": "29ba223"
+ "git_commit": "a1d51b1"
 }

@@ -52,13 +52,29 @@ def main() -> None:
                      f"{with_ci(s['prec_at_90'], s.get('ci'), 'prec_at_90')} | "
                      f"{fmt(r['span']['macro_aupr'])} |")
 
+    lines += ["", "## Selection rule (top 2 quotes per clause type)", "",
+              "The final configuration is chosen by high-stakes found F2: F2 over the eight "
+              "high-stakes types, where a yes only counts as a hit with a correct quote. Every "
+              "method shows at most its top 2 quotes per clause type, and findings per contract "
+              "is what a reviewer has to read after that cap and the threshold.", "",
+              "| Method | Threshold | High-stakes found F2 | Findings per contract "
+              "| Seconds per contract |",
+              "|---|---:|---:|---:|---:|"]
+    for r in results:
+        h, hci = r["contract"]["high_stakes"], r["contract"].get("high_stakes_ci")
+        per = r.get("findings_per_contract")
+        lines.append(f"| {r['name']} | {r['threshold']} "
+                     f"| {with_ci(h.get('found_f2'), hci, 'found_f2')} "
+                     f"| {fmt(per, digits=1)} | {r['time']['per_contract_s']:.1f} |")
+
     lines += ["", "## Contract level (is the clause there, and did we quote it)", "",
               "Micro scores pool every (contract, clause type) pair. High-stakes columns average "
-              "the eight high-stakes types. Found = clause present and a correct span quoted. "
-              "Found F2 = F2 where a yes only counts as a hit with a correct quote.", "",
+              "the eight high-stakes types. Found = clause present and a correct span among the "
+              "quotes shown. Presence F2 ignores the quotes, so saying yes everywhere scores "
+              "well on it; it is kept for comparison, not for choosing.", "",
               "| Method | Threshold | Precision | Recall | F1 | Macro F1 | High-stakes recall "
-              "| High-stakes F2 | High-stakes found | High-stakes found F2 |",
-              "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+              "| High-stakes presence F2 | High-stakes found |",
+              "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for r in results:
         m, h = r["contract"]["micro"], r["contract"]["high_stakes"]
         p, rc, f1 = (with_ci(m[k], m.get("ci"), k) for k in ("precision", "recall", "f1"))
@@ -66,8 +82,7 @@ def main() -> None:
         lines.append(f"| {r['name']} | {r['threshold']} | {p} | {rc} | {f1} | "
                      f"{fmt(r['contract']['macro']['f1'])} | {with_ci(h['recall'], hci, 'recall')} "
                      f"| {with_ci(h['f2'], hci, 'f2')} "
-                     f"| {with_ci(h['found_recall'], hci, 'found_recall')} "
-                     f"| {with_ci(h.get('found_f2'), hci, 'found_f2')} |")
+                     f"| {with_ci(h['found_recall'], hci, 'found_recall')} |")
 
     if results:
         lines += ["", "## High-stakes clause types", "",
