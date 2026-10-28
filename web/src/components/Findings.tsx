@@ -31,9 +31,12 @@ export default function Findings({ doc, categories, active, onPick }: Props) {
                   const idx = doc.findings.findIndex(
                     (f) => f.start === e.start && f.end === e.end && f.category === e.category,
                   );
+                  // Two quotes on the same page get numbered, so the buttons differ.
+                  const label = e.location || e.category;
+                  const same = fl.evidence.slice(0, k).filter((o) => o.location === e.location);
                   return (
                     <button key={k} onClick={() => idx >= 0 && onPick(idx)}>
-                      {e.location || e.category}
+                      {same.length ? `${label} (${same.length + 1})` : label}
                     </button>
                   );
                 })}

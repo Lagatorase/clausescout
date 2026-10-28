@@ -11,6 +11,9 @@ interface Props {
 
 export default function Contract({ text, findings, active, onPick }: Props) {
   const parts = useMemo(() => pieces(text.length, findings), [text, findings]);
+  // PDF text keeps its line breaks. I show a single break as a space so lines reflow; the
+  // length doesn't change, so every offset still matches the API's text.
+  const shown = useMemo(() => text.replace(/(?<!\n)\n(?!\n)/g, " "), [text]);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,7 +26,7 @@ export default function Contract({ text, findings, active, onPick }: Props) {
     <article className="sheet" aria-label="Contract text">
       <div className="contract" ref={ref}>
         {parts.map((p) => {
-          const chunk = text.slice(p.start, p.end);
+          const chunk = shown.slice(p.start, p.end);
           if (p.covers.length === 0) return <span key={p.start}>{chunk}</span>;
           const isActive = p.covers.includes(active);
           return (

@@ -7,8 +7,8 @@
   --ink-soft: #566170;
   --rule: #dde1e6;
   --redline: #1e5a7a;
-  --highlight: #ffe98a;
-  --highlight-active: #ffd23f;
+  --highlight: #fff6c9;
+  --highlight-active: #ffe066;
   --high: #a8322a;
   --medium: #9a6408;
   --low: #5b6472;
@@ -24,8 +24,8 @@
     --ink-soft: #9aa3ae;
     --rule: #2d343d;
     --redline: #7cb7d6;
-    --highlight: #5a4b12;
-    --highlight-active: #8a6f10;
+    --highlight: #2f2a16;
+    --highlight-active: #7a6210;
     --high: #f0857a;
     --medium: #e3b14f;
     --low: #a3acb7;
@@ -41,8 +41,8 @@
   --ink-soft: #9aa3ae;
   --rule: #2d343d;
   --redline: #7cb7d6;
-  --highlight: #5a4b12;
-  --highlight-active: #8a6f10;
+  --highlight: #2f2a16;
+  --highlight-active: #7a6210;
   --high: #f0857a;
   --medium: #e3b14f;
   --low: #a3acb7;
@@ -177,7 +177,7 @@ mark.active { background: var(--highlight-active); box-shadow: 0 2px 0 var(--red
   padding: 6px 8px;
   font: 0.88rem/1.45 "Source Serif 4", Georgia, serif;
 }
-.quote[aria-current="true"] { background: var(--highlight); }
+.quote[aria-current="true"] { background: var(--highlight-active); }
 .quote .where { font: 0.78rem "IBM Plex Sans", sans-serif; color: var(--ink-soft); }
 .missing { font-size: 0.85rem; }
 
@@ -197,7 +197,7 @@ mark.active { background: var(--highlight-active); box-shadow: 0 2px 0 var(--red
   padding: 0 5px;
 }
 
-/* On narrow screens the panes stack: documents, findings, then the contract. */
+/* On narrow screens the panes stack: documents, the contract, then the findings. */
 @media (max-width: 900px) {
   .review { display: block; height: auto; }
   .docs, .panel { border: 0; border-bottom: 1px solid var(--rule); }
