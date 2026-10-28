@@ -1,0 +1,11 @@
+# Every experiment, one change at a time. All decisions use the validation split; the test
+# split needs final: true and is run once at the end.
+#
+# threshold: the score at which a clause type counts as present, for contract-level metrics.
+# n_boot: bootstrap resamples for confidence intervals (0 skips them).
+
+experiments:
+  - name: keywords-v1
+    method: keywords
+    split: val
+    threshold: 0.5
