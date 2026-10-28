@@ -61,3 +61,30 @@ with rare clauses tend to be long. I replaced it before using the split for anyt
 Full statistics are in [reports/data_stats.md](../reports/data_stats.md). One thing to know
 when reading results: Price Restrictions has no test contracts, which the CUAD paper also
 notes, so it is excluded from test-set per-category tables.
+
+## Text from PDFs
+
+CUAD's gold spans come from its own plain-text files, but real contracts usually arrive as
+PDFs. `scripts/pdf_text_check.py` measures how many gold clauses can still be found word for
+word (by the grounding check) in the text ClauseScout extracts from the original PDFs. Each
+row adds one change, measured on the validation contracts:
+
+| Step | Validation gold spans found |
+|---|---:|
+| Plain PyMuPDF text, two PDFs unmatched by filename | 1,521 / 1,712 (88.8%) |
+| All 62 PDFs matched | 1,565 / 1,757 (89.1%) |
+| Running headers, footers and page numbers removed | 1,563 / 1,757 (89.0%) |
+| Words hyphenated at line ends re-joined | 1,527 / 1,757 (86.9%) |
+| Unicode NFKC and soft hyphens | 1,697 / 1,757 (96.6%) |
+| Grounding forgives ligatures, soft hyphens and a space after a line-break hyphen | 1,719 / 1,757 (97.8%) |
+| Punctuation moved with re-joined words (bug fix) | 1,741 / 1,757 (99.1%) |
+
+The final pipeline finds 9,322 / 9,423 (98.9%) on the training contracts. The biggest single
+cause was several PDFs using the Greek question mark (U+037E) in place of a semicolon.
+Re-joining hyphenated words lowered the number at first because CUAD's own text keeps a space
+after such hyphens ("non- transferable"); the grounding change handles both forms.
+
+Of the 16 validation spans still not found, 14 are differences on CUAD's side rather than
+extraction errors: superscripts split in the gold text ("26t h day of May"), page numbers or
+source footers inside gold spans, and missing spaces ("PartyA"). The other 2 come from a PDF
+that puts a space before a comma after a Chinese title.
