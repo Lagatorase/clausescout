@@ -61,9 +61,11 @@ def main() -> None:
     for r in results:
         m, h = r["contract"]["micro"], r["contract"]["high_stakes"]
         p, rc, f1 = (with_ci(m[k], m.get("ci"), k) for k in ("precision", "recall", "f1"))
+        hci = r["contract"].get("high_stakes_ci")
         lines.append(f"| {r['name']} | {r['threshold']} | {p} | {rc} | {f1} | "
-                     f"{fmt(r['contract']['macro']['f1'])} | {fmt(h['recall'])} | {fmt(h['f2'])} | "
-                     f"{fmt(h['found_recall'])} |")
+                     f"{fmt(r['contract']['macro']['f1'])} | {with_ci(h['recall'], hci, 'recall')} "
+                     f"| {with_ci(h['f2'], hci, 'f2')} "
+                     f"| {with_ci(h['found_recall'], hci, 'found_recall')} |")
 
     if results:
         lines += ["", "## High-stakes clause types", "",
@@ -84,6 +86,9 @@ def main() -> None:
               "| Seconds per contract | Cost per contract (USD) | Hardware |",
               "|---|---:|---:|---:|---:|---:|---|"]
     for r in results:
+        # Reference rows like always-present have no grounding or timing to report.
+        if not r.get("grounding"):
+            continue
         g, hw = r["grounding"], r["hardware"]
         where = hw.get("gpu") or hw.get("cpu") or "?"
         lines.append(f"| {r['name']} | {g['submitted']:,} | {g['rejected']:,} | "
