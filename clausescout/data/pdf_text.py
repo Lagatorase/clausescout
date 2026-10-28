@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 import re
+import unicodedata
 from collections import Counter
 
 from clausescout.grounding.location import Segment
@@ -67,6 +68,17 @@ def _bare_page_numbers(pages: list[list[str]]) -> set[tuple[int, int]]:
     return {(p, i) for p, i, off in found if off == offset}
 
 
+def clean_characters(pages: list[list[str]]) -> list[list[str]]:
+    """Applies Unicode NFKC to every line, which turns presentation forms back into plain text.
+
+    PDFs often store ligatures (\ufb01 for "fi"), full-width or non-breaking spaces, and look-alike
+    characters such as the Greek question mark (U+037E) in place of a semicolon. NFKC maps all
+    of these to the ordinary characters without changing the wording. Soft hyphens survive
+    NFKC; I deal with them when re-joining lines and then remove any left over.
+    """
+    return [[unicodedata.normalize("NFKC", line) for line in lines] for lines in pages]
+
+
 def remove_running_lines(pages: list[list[str]]) -> list[list[str]]:
     """Drops repeated headers and footers and printed page numbers from each page's lines."""
     zones = [_zone(lines) for lines in pages]
@@ -99,7 +111,8 @@ def remove_running_lines(pages: list[list[str]]) -> list[list[str]]:
     return cleaned
 
 
-_LINE_END_HYPHEN = re.compile(r"(\w+)-$")
+_LINE_END_HYPHEN = re.compile(r"(\w+)([-\u00ad])$")
+SOFT_HYPHEN = "\u00ad"
 _LINE_START_WORD = re.compile(r"(\w+)(.*)$", re.DOTALL)
 _LETTERS = r"[^\W\d_]+"
 
@@ -134,7 +147,8 @@ def rejoin_hyphenated(pages: list[list[str]]) -> list[list[str]]:
         left, frag, rest = m.group(1), n.group(1), n.group(2)
         joined = (left + frag).lower()
         is_break = (left + frag).isalpha() and joined in words
-        if is_break and f"{left}-{frag}".lower() not in compounds:
+        # A soft hyphen only ever marks a line break, so it always goes.
+        if m.group(2) == SOFT_HYPHEN or (is_break and f"{left}-{frag}".lower() not in compounds):
             pages[p][i] = line[:-1] + frag
         else:
             pages[p][i] = line + frag
@@ -143,8 +157,13 @@ def rejoin_hyphenated(pages: list[list[str]]) -> list[list[str]]:
 
 
 def pages_to_text(pages: list[list[str]]) -> tuple[str, list[Segment]]:
-    """Cleans the pages and joins them into one text with a character range per page."""
-    pages = rejoin_hyphenated(remove_running_lines(pages))
+    """Cleans the pages and joins them into one text with a character range per page.
+
+    The order matters: characters first so header comparison sees clean text, then page
+    furniture, then hyphen re-joining, which can reach across the page breaks left behind.
+    """
+    pages = rejoin_hyphenated(remove_running_lines(clean_characters(pages)))
+    pages = [[line.replace(SOFT_HYPHEN, "") for line in lines] for lines in pages]
     parts, segments, pos = [], [], 0
     for number, lines in enumerate(pages, start=1):
         # Every page keeps its real number, even if cleaning left it empty.

@@ -3,7 +3,12 @@
 import pymupdf
 
 from clausescout.data.documents import load_document
-from clausescout.data.pdf_text import pages_to_text, rejoin_hyphenated, remove_running_lines
+from clausescout.data.pdf_text import (
+    clean_characters,
+    pages_to_text,
+    rejoin_hyphenated,
+    remove_running_lines,
+)
 from clausescout.grounding.location import locate
 from clausescout.grounding.verbatim import GroundingIndex
 
@@ -101,3 +106,45 @@ def test_hyphen_break_across_a_page_keeps_the_word_on_the_first_page():
 def test_number_ranges_and_dashes_on_their_own_are_left_alone_except_the_break():
     pages = [["see Sections 4-", "6 below", "Signed: -", "Name"]]
     assert rejoin_hyphenated(pages) == [["see Sections 4-6", "below", "Signed: -", "Name"]]
+
+
+def test_nfkc_fixes_ligatures_look_alike_semicolons_and_odd_spaces():
+    lig, greek_q, nbsp = chr(0xFB01), chr(0x037E), chr(0x00A0)
+    pages = [[f"the {lig}rst Party{greek_q} and{nbsp}the other"]]
+    assert clean_characters(pages) == [["the first Party; and the other"]]
+
+
+def test_soft_hyphens_always_join_and_never_survive():
+    soft = chr(0x00AD)
+    # A soft hyphen at a line end is a break even if the joined word appears nowhere else.
+    text, _ = pages_to_text([[f"the indemni{soft}", f"fication obli{soft}gations"]])
+    assert text == "the indemnification\nobligations"
+
+
+def test_synthetic_pdf_with_header_hyphen_ligature_and_page_split(tmp_path):
+    # Three pages with a running header and page numbers. Page 1 ends with a hyphenated word
+    # and starts a clause that finishes on page 2; page 2 has a "fi" ligature.
+    lig = chr(0xFB01)
+    header = "SUPPLY AGREEMENT - CONFIDENTIAL"
+    # The wide font clips long lines at the page edge, so I keep every line short.
+    bodies = [
+        f"{header}\n1. An indemnification claim\nis final.\n2. Liability. In no event\n"
+        "shall the Supplier's liability\nexceed the indemni-\n1",
+        f"{header}\nfication cap, being the fees\npaid in the {lig}rst year.\n"
+        "3. Term. Two years.\n2",
+        f"{header}\n4. Law. Singapore law.\n3",
+    ]
+    path = tmp_path / "msa.pdf"
+    pdf = pymupdf.open()
+    for body in bodies:
+        # The built-in "japan" font keeps the U+FB01 ligature when the PDF is read back.
+        pdf.new_page().insert_text((72, 72), body, fontname="japan")
+    pdf.save(path)
+    doc = load_document(path)
+    clause = ("In no event shall the Supplier's liability exceed the indemnification cap, "
+              "being the fees paid in the first year.")
+    hit = GroundingIndex(doc.text).find(clause)
+    assert hit is not None
+    assert locate(doc.segments, *hit).label == "pp. 1-2"
+    assert doc.text.count(header) == 1
+    assert lig not in doc.text
