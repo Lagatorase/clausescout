@@ -18,7 +18,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from clausescout.data.cuad import CATEGORIES, HIGH_STAKES, Contract
-from clausescout.findings import Finding, to_preds
+from clausescout.findings import MAX_PER_TYPE, Finding, to_preds, top_per_type
 from clausescout.grounding.verbatim import GroundingIndex, GroundingStats, ground_findings
 from clausescout.metrics.contract import contract_metrics
 from clausescout.metrics.span import gold_from_contracts, span_metrics
@@ -63,13 +63,19 @@ def git_commit() -> str | None:
 
 
 def score_findings(
-    contracts: list[Contract], findings: list[Finding], threshold: float, n_boot: int = 0
+    contracts: list[Contract], findings: list[Finding], threshold: float, n_boot: int = 0,
+    max_per_type: int | None = MAX_PER_TYPE,
 ) -> dict:
-    """The metric part of a results file, so saved findings can be re-scored without re-running."""
+    """The metric part of a results file, so saved findings can be re-scored without re-running.
+
+    Span metrics use every finding, as in the CUAD paper. Contract metrics use what a reviewer
+    would see: at most max_per_type quotes per clause type, then the threshold.
+    """
     gold = gold_from_contracts(contracts, CATEGORIES)
-    preds = to_preds(findings)
-    span = span_metrics(gold, preds, n_boot=n_boot)
-    con = contract_metrics(gold, preds, threshold=threshold, n_boot=n_boot)
+    span = span_metrics(gold, to_preds(findings), n_boot=n_boot)
+    shown = top_per_type(findings, max_per_type)
+    con = contract_metrics(gold, to_preds(shown), threshold=threshold, n_boot=n_boot)
+    n_shown = sum(f.score >= threshold for f in shown)
 
     def per_cat(name):
         s, p = span.per_category[name], con.per_category[name]
@@ -77,6 +83,9 @@ def score_findings(
 
     return {
         "threshold": threshold,
+        "max_per_type": max_per_type,
+        # How much a reviewer has to read: quotes shown per contract after the cap and threshold.
+        "findings_per_contract": n_shown / max(len(contracts), 1),
         "span": {"overall": asdict(span.overall), "macro_aupr": span.macro_aupr},
         "contract": {"micro": asdict(con.micro), "macro": con.macro,
                      "high_stakes": con.high_stakes, "macro_ci": con.macro_ci,
@@ -91,6 +100,7 @@ def run_experiment(
     contracts: Iterable[Contract],
     threshold: float = 0.5,
     n_boot: int = 0,
+    max_per_type: int | None = MAX_PER_TYPE,
     progress: bool = False,
     resume_path: str | os.PathLike | None = None,
 ) -> tuple[dict, list[Finding]]:
@@ -150,7 +160,7 @@ def run_experiment(
     n = len(contracts)
     summary = {
         "contracts": n,
-        **score_findings(contracts, kept_all, threshold, n_boot),
+        **score_findings(contracts, kept_all, threshold, n_boot, max_per_type),
         "grounding": {
             "submitted": stats.submitted, "accepted": stats.accepted, "rejected": stats.rejected,
             "rejection_rate": stats.rejection_rate,

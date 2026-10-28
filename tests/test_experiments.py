@@ -3,8 +3,8 @@
 import json
 
 from clausescout.data.cuad import CATEGORIES, Contract, Span
-from clausescout.experiments import run_experiment
-from clausescout.findings import Finding
+from clausescout.experiments import run_experiment, score_findings
+from clausescout.findings import Finding, top_per_type
 
 LAW = "This Agreement is governed by the laws of Singapore."
 
@@ -64,3 +64,34 @@ def test_interrupted_run_resumes_without_redoing_contracts(tmp_path):
     assert summary["usage"]["input_tokens"] == 300
     full, _ = run_experiment(StubMethod(), contracts, threshold=0.5)
     assert summary["span"] == full["span"] and summary["grounding"] == full["grounding"]
+
+
+def test_cap_keeps_the_best_distinct_quotes_per_clause_type():
+    fs = [Finding("c1", "Governing Law", "a", 0.2, start=5),
+          Finding("c1", "Governing Law", "b", 0.9, start=9),
+          Finding("c1", "Governing Law", "b", 0.95, start=9),  # repeat, counted once
+          Finding("c1", "Governing Law", "c", 0.5, start=1),
+          Finding("c1", "Exclusivity", "d", 0.1),
+          Finding("c2", "Governing Law", "e", 0.3)]
+    kept = top_per_type(fs, 2)
+    got = sorted((f.contract_id, f.category, f.text, f.score) for f in kept)
+    assert got == [("c1", "Exclusivity", "d", 0.1), ("c1", "Governing Law", "b", 0.95),
+                   ("c1", "Governing Law", "c", 0.5), ("c2", "Governing Law", "e", 0.3)]
+    assert len(top_per_type(fs, None)) == len(fs)
+
+
+def test_capped_scoring_hides_a_correct_quote_ranked_third():
+    # The correct law quote is only the third best, so with a cap of 2 the reviewer never sees
+    # it: presence still counts, but found F2 drops to 0. Span metrics ignore the cap.
+    c = _contract("c1", with_law=True)
+    fs = [Finding("c1", "Governing Law", "SUPPLY AGREEMENT", 0.9),
+          Finding("c1", "Governing Law", "1. Supply. Goods.", 0.8),
+          Finding("c1", "Governing Law", LAW, 0.7)]
+    capped = score_findings([c], fs, threshold=0.5, max_per_type=2)
+    uncapped = score_findings([c], fs, threshold=0.5, max_per_type=None)
+    law_c = capped["per_category"]["Governing Law"]["contract"]
+    law_u = uncapped["per_category"]["Governing Law"]["contract"]
+    assert law_c["recall"] == law_u["recall"] == 1.0
+    assert law_c["found_f2"] == 0.0 and law_u["found_f2"] == 1.0
+    assert capped["span"] == uncapped["span"]
+    assert capped["findings_per_contract"] == 2 and uncapped["findings_per_contract"] == 3
