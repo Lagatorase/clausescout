@@ -47,6 +47,9 @@ class ContractMetrics:
     # Unweighted means over categories that have at least one contract with the clause.
     macro: dict[str, float]
     high_stakes: dict[str, float]
+    # 95% bootstrap intervals for the macro and high-stakes means, when n_boot > 0.
+    macro_ci: dict[str, tuple[float, float]] = field(default_factory=dict)
+    high_stakes_ci: dict[str, tuple[float, float]] = field(default_factory=dict)
 
 
 def _ratio(a: float, b: float) -> float:
@@ -129,10 +132,13 @@ def contract_metrics(
     if n_boot > 0:
         rng = np.random.default_rng(seed)
         samples = {name: [] for name in results}
+        means = {"macro": [], "high": []}
         n = len(contracts)
         for _ in range(n_boot):
             weights = np.bincount(rng.integers(0, n, n), minlength=n).astype(float)
-            b_per, _, _ = evaluate(weights)
+            b_per, b_macro, b_high = evaluate(weights)
+            means["macro"].append(b_macro)
+            means["high"].append(b_high)
             for name, (_, vals) in b_per.items():
                 samples[name].append(vals)
         for name, vals in samples.items():
@@ -143,5 +149,17 @@ def contract_metrics(
                     lo, hi = np.percentile(col, [2.5, 97.5])
                     results[name].ci[metric] = (float(lo), float(hi))
 
+    def mean_ci(dicts):
+        out = {}
+        for metric in METRICS:
+            col = [d[metric] for d in dicts if not math.isnan(d[metric])]
+            if col:
+                lo, hi = np.percentile(col, [2.5, 97.5])
+                out[metric] = (float(lo), float(hi))
+        return out
+
     micro = results.pop(None)
+    if n_boot > 0:
+        return ContractMetrics(results, micro, macro, high, mean_ci(means["macro"]),
+                               mean_ci(means["high"]))
     return ContractMetrics(results, micro, macro, high)

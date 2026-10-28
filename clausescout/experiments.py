@@ -60,6 +60,30 @@ def git_commit() -> str | None:
         return None
 
 
+def score_findings(
+    contracts: list[Contract], findings: list[Finding], threshold: float, n_boot: int = 0
+) -> dict:
+    """The metric part of a results file, so saved findings can be re-scored without re-running."""
+    gold = gold_from_contracts(contracts, CATEGORIES)
+    preds = to_preds(findings)
+    span = span_metrics(gold, preds, n_boot=n_boot)
+    con = contract_metrics(gold, preds, threshold=threshold, n_boot=n_boot)
+
+    def per_cat(name):
+        s, p = span.per_category[name], con.per_category[name]
+        return {"span": asdict(s), "contract": asdict(p)}
+
+    return {
+        "threshold": threshold,
+        "span": {"overall": asdict(span.overall), "macro_aupr": span.macro_aupr},
+        "contract": {"micro": asdict(con.micro), "macro": con.macro,
+                     "high_stakes": con.high_stakes, "macro_ci": con.macro_ci,
+                     "high_stakes_ci": con.high_stakes_ci},
+        "per_category": {cat: per_cat(cat) for cat in CATEGORIES if cat in span.per_category},
+        "high_stakes_types": HIGH_STAKES,
+    }
+
+
 def run_experiment(
     method,
     contracts: Iterable[Contract],
@@ -89,25 +113,11 @@ def run_experiment(
     if progress:
         print()
 
-    gold = gold_from_contracts(contracts, CATEGORIES)
-    preds = to_preds(kept_all)
-    span = span_metrics(gold, preds, n_boot=n_boot)
-    con = contract_metrics(gold, preds, threshold=threshold, n_boot=n_boot)
     usage = dict(getattr(method, "usage", {}) or {})
     n = len(contracts)
-
-    def per_cat(name):
-        s, p = span.per_category[name], con.per_category[name]
-        return {"span": asdict(s), "contract": asdict(p)}
-
     summary = {
         "contracts": n,
-        "threshold": threshold,
-        "span": {"overall": asdict(span.overall), "macro_aupr": span.macro_aupr},
-        "contract": {"micro": asdict(con.micro), "macro": con.macro,
-                     "high_stakes": con.high_stakes},
-        "per_category": {cat: per_cat(cat) for cat in CATEGORIES if cat in span.per_category},
-        "high_stakes_types": HIGH_STAKES,
+        **score_findings(contracts, kept_all, threshold, n_boot),
         "grounding": {
             "submitted": stats.submitted, "accepted": stats.accepted, "rejected": stats.rejected,
             "rejection_rate": stats.rejection_rate,

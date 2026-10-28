@@ -114,3 +114,6 @@ def test_bootstrap_interval_contains_point_estimate():
     lo, hi = m.per_category[GL].ci["f1"]
     assert lo <= m.per_category[GL].f1 <= hi
     assert "recall" in m.micro.ci
+    # The high-stakes mean gets its own interval, which the selection rule compares.
+    lo, hi = m.high_stakes_ci["f2"]
+    assert lo <= m.high_stakes["f2"] <= hi
