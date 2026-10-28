@@ -1,6 +1,7 @@
 """Write examples of what a method gets wrong, per high-stakes clause type.
 
-For each type I count three kinds of error at the run's threshold and show a few examples:
+For each type I count three kinds of error in what a reviewer would see (the top 2 quotes per
+clause type, then the run's threshold) and show a few examples:
 - missed: the contract has the clause, and nothing above the threshold was predicted;
 - false alarm: something was predicted, but the contract has no such clause;
 - wrong quote: the clause was found, but no predicted quote matches a gold span.
@@ -14,6 +15,7 @@ import random
 from pathlib import Path
 
 from clausescout.data.cuad import HIGH_STAKES, load_split
+from clausescout.findings import Finding, top_per_type
 from clausescout.metrics.span import is_match
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,12 +36,14 @@ def main() -> None:
     result = json.loads((ROOT / "experiments" / "results" / f"{args.name}.json").read_text("utf-8"))
     threshold, split = result["threshold"], result["split"]
     contracts = {c.id: c for c in load_split(split)}
-    preds: dict[tuple[str, str], list[dict]] = {}
     with open(ROOT / "runs" / args.name / "findings.jsonl", encoding="utf-8") as f:
-        for line in f:
-            p = json.loads(line)
-            if p["score"] >= threshold:
-                preds.setdefault((p["contract_id"], p["category"]), []).append(p)
+        findings = [Finding(**json.loads(line)) for line in f]
+    # The same cap the metrics use, so these examples explain the scores in the tables.
+    preds: dict[tuple[str, str], list[dict]] = {}
+    for p in top_per_type(findings, result.get("max_per_type")):
+        if p.score >= threshold:
+            preds.setdefault((p.contract_id, p.category), []).append(
+                {"text": p.text, "score": p.score})
 
     rng = random.Random(args.seed)
     lines = [f"# Error analysis: {args.name} ({split}, threshold {threshold})", "",
