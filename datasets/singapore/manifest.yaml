@@ -1,0 +1,85 @@
+# Singapore-law test contracts: public exhibits from SEC EDGAR.
+#
+# Found with EDGAR full-text search for "governed by the laws of Singapore" on 2026-10-28.
+# I kept commercial agreements (licences, services, supply, joint ventures), one per company,
+# and left out legal opinions, employment letters, guarantees and trust deeds. Filing details
+# are from the search index; the accession number identifies each filing.
+# scripts/fetch_singapore.py downloads them. Nothing here is labelled: labels go in
+# datasets/singapore/labels/, made by hand with scripts/label_tool.py.
+
+contracts:
+  - id: republic-power-software-dev
+    company: "Republic Power Group Ltd"
+    title: "Form of software development service agreement"
+    filing: "F-1 filed 2025-07-02, accession 0001213900-25-060508"
+    url: https://www.sec.gov/Archives/edgar/data/1912884/000121390025060508/ea023149505ex10-5_republic.htm
+  - id: cel-sci-amarox
+    company: "CEL-SCI Corp"
+    title: "Agreement with Amarox"
+    filing: "8-K filed 2026-05-14, accession 0001654954-26-004910"
+    url: https://www.sec.gov/Archives/edgar/data/725363/000165495426004910/cvm_ex10sss.htm
+  - id: sharing-economy-services
+    company: "Sharing Economy International Inc."
+    title: "Services agreement, 6 September 2018"
+    filing: "8-K filed 2018-09-10, accession 0001213900-18-012316"
+    url: https://www.sec.gov/Archives/edgar/data/819926/000121390018012316/f8k090618ex10-1_sharing.htm
+  - id: mega-matrix-trademark-licence
+    company: "Mega Matrix Corp."
+    title: "Trade mark licence agreement, 15 December 2023"
+    filing: "8-K filed 2023-12-20, accession 0001213900-23-097369"
+    url: https://www.sec.gov/Archives/edgar/data/1036848/000121390023097369/ea190363ex99-1_megamatrix.htm
+  - id: delixy-sale-purchase
+    company: "Delixy Holdings Ltd"
+    title: "Sale and purchase agreement with Wisecome Oil, 28 June 2024"
+    filing: "F-1 filed 2024-11-15, accession 0001213900-24-098770"
+    url: https://www.sec.gov/Archives/edgar/data/2025218/000121390024098770/ea020723806ex10-11_delixy.htm
+  - id: next-technology-cooling-services
+    company: "Next Technology Holding Inc."
+    title: "Liquid cooling system development and technical service contract, 15 July 2025"
+    filing: "8-K filed 2025-09-26, accession 0001213900-25-092085"
+    url: https://www.sec.gov/Archives/edgar/data/1784970/000121390025092085/ea025882701ex10-1_next.htm
+  - id: hotapp-services
+    company: "HotApp International, Inc."
+    title: "Agreement for services"
+    filing: "8-K filed 2017-02-21, accession 0001654954-17-001265"
+    url: https://www.sec.gov/Archives/edgar/data/1600347/000165495417001265/http_ex10-1.htm
+  - id: bitfufu-cloud-mining
+    company: "Bitfufu Inc."
+    title: "Form of cloud mining service agreement"
+    filing: "filed 2026, accession 0001213900-26-048533"
+    url: https://www.sec.gov/Archives/edgar/data/1921158/000121390026048533/ea028681601ex10-6.htm
+  - id: sequans-assembly-testing
+    company: "Sequans Communications"
+    title: "Assembly and testing service agreement"
+    filing: "filed 2011, accession 0001193125-11-073942"
+    url: https://www.sec.gov/Archives/edgar/data/1383395/000119312511073942/dex1011.htm
+  - id: acushnet-singapore-jv
+    company: "Acushnet Holdings Corp."
+    title: "Singapore joint venture agreement"
+    filing: "filed 2026, accession 0001672013-26-000007"
+    url: https://www.sec.gov/Archives/edgar/data/1672013/000167201326000007/ex101-singaporejvagreement.htm
+  - id: bionexus-ip-licence
+    company: "BioNexus Gene Lab Corp"
+    title: "Exclusive intellectual property licence agreement"
+    filing: "filed 2025, accession 0001477932-25-008724"
+    url: https://www.sec.gov/Archives/edgar/data/1737523/000147793225008724/bglc_ex102.htm
+  - id: yelp-master-subscription
+    company: "Yelp Inc."
+    title: "Master subscription agreement, 18 May 2007"
+    filing: "filed 2014, accession 0001206774-14-000681"
+    url: https://www.sec.gov/Archives/edgar/data/1345016/000120677414000681/exhibit10-22.htm
+  - id: maxeon-development-services
+    company: "Maxeon Solar Technologies, Ltd."
+    title: "Bilateral development services agreement, 28 February 2025"
+    filing: "filed 2025, accession 0001796898-25-000031"
+    url: https://www.sec.gov/Archives/edgar/data/1796898/000179689825000031/exhibit416bilateraldevel.htm
+  - id: volitionrx-patent-licence
+    company: "VolitionRx Ltd"
+    title: "Patent licence agreement"
+    filing: "filed 2012, accession 0001078782-12-000060"
+    url: https://www.sec.gov/Archives/edgar/data/93314/000107878212000060/f8ka2011012_ex10z12.htm
+  - id: transphorm-equipment-purchase
+    company: "Transphorm, Inc."
+    title: "Equipment purchase agreement"
+    filing: "filed 2023, accession 0001715768-23-000112"
+    url: https://www.sec.gov/Archives/edgar/data/1715768/000171576823000112/equipmentpurchaseagrtransp.htm
