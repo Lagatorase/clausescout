@@ -5,16 +5,41 @@ are untouched until the final configuration has been chosen.
 
 ## How the final configuration is chosen
 
-I wrote this rule down before comparing any method other than the keyword baseline, so the
-choice can't drift towards whichever result looks best afterwards.
+### The rule in use (rule 2)
 
-1. The final configuration is the method with the highest mean contract-level F2 over the eight
-   high-stakes clause types (Cap On Liability, Uncapped Liability, Termination For Convenience,
-   Change Of Control, Anti-Assignment, Exclusivity, Non-Compete, Governing Law) on validation.
-   F2 counts recall twice as much as precision, because a missed clause in due diligence costs
-   more than an extra clause to read.
-2. If the top methods are within run-to-run noise, or their 95% bootstrap intervals overlap, I
-   prefer the one that runs fully locally, then the cheaper one, then the faster one.
+1. Every method shows at most 2 quotes per clause type per contract: its top 2 by score.
+2. Each method's threshold is chosen on validation to maximise mean high-stakes found F2 over
+   the eight high-stakes clause types (Cap On Liability, Uncapped Liability, Termination For
+   Convenience, Change Of Control, Anti-Assignment, Exclusivity, Non-Compete, Governing Law).
+   Found F2 only counts a "yes" as a hit when it comes with a correct quote; a "yes" without
+   one counts both as a miss and as a false alarm. F2 counts recall twice as much as precision,
+   because a missed clause costs more in due diligence than an extra one to read.
+3. The final configuration is the method with the highest high-stakes found F2 on validation.
+   If the top methods' 95% bootstrap intervals overlap, I prefer the one that runs fully
+   locally, then the one with fewer findings per contract, then the faster one.
+4. Findings per contract (after the cap and the threshold) is reported for every method, as a
+   measure of how much a reviewer has to read.
+
+Span-level metrics (AUPR, precision at 80% and 90% recall) still use every finding a method
+returns, uncapped, so they stay comparable with the CUAD paper.
+
+### Why the rule was changed
+
+Rule 2 replaced the original rule after I had seen validation results. No test data was used
+for either rule or for the change. The original rule (written down before comparing methods)
+was:
+
+> The final configuration is the method with the highest mean contract-level F2 over the eight
+> high-stakes clause types on validation. If the top methods are within run-to-run noise, or
+> their 95% bootstrap intervals overlap, prefer the one that runs fully locally, then the
+> cheaper one, then the faster one.
+
+It was won by saying yes. About half of the high-stakes (contract, clause type) pairs have the
+clause, and at that base rate F2 rewards predicting "present" everywhere: a reference row that
+says every clause is present and quotes nothing scored 0.789, and the threshold sweep pushed the
+fine-tuned QA model down to 0.05, where it returned about 113 findings per contract. Found F2
+can't be won without correct quotes, and the cap of 2 stops a method from winning by quoting
+everything.
 
 Method 5 (a hosted LLM through the Anthropic API) is not yet run. It costs money, so I left it
 out, and it is not part of this choice.
