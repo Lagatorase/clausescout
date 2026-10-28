@@ -36,11 +36,14 @@ def main() -> None:
     if split == "test" and not cfg.get("final", False):
         sys.exit("Test-split runs need final: true in the config.")
     contracts = load_split(split)[: args.limit]
+    (ROOT / "runs" / args.name).mkdir(parents=True, exist_ok=True)
 
     method = build_method(cfg["method"], cfg.get("params"))
     summary, findings = run_experiment(
         method, contracts, threshold=cfg.get("threshold", 0.5), n_boot=cfg.get("n_boot", 0),
         progress=True,
+        # Full runs save each contract as they go, so an interrupted run picks up where it was.
+        resume_path=None if args.limit else ROOT / "runs" / args.name / "partial.jsonl",
     )
     summary = {"name": args.name, "config": cfg, "split": split,
                "finished": datetime.now(UTC).isoformat(timespec="seconds"), **summary}

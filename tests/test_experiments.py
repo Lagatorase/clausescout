@@ -48,3 +48,19 @@ def test_runner_grounds_scores_and_accounts_for_cost():
     assert summary["time"]["per_contract_s"] >= 0
     # The summary has to be saveable as JSON.
     json.dumps(summary, default=float)
+
+
+def test_interrupted_run_resumes_without_redoing_contracts(tmp_path):
+    contracts = [_contract("a", True), _contract("b", False), _contract("c", True)]
+    resume = tmp_path / "partial.jsonl"
+    # The first run gets through two contracts before it is stopped.
+    run_experiment(StubMethod(), contracts[:2], threshold=0.5, resume_path=resume)
+    assert len(resume.read_text().splitlines()) == 2
+
+    fresh = StubMethod()
+    summary, findings = run_experiment(fresh, contracts, threshold=0.5, resume_path=resume)
+    # Only the third contract is extracted again, but usage and results cover all three.
+    assert fresh.usage["input_tokens"] == 100
+    assert summary["usage"]["input_tokens"] == 300
+    full, _ = run_experiment(StubMethod(), contracts, threshold=0.5)
+    assert summary["span"] == full["span"] and summary["grounding"] == full["grounding"]
