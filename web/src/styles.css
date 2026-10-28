@@ -1,0 +1,209 @@
+/* ClauseScout: a reading surface for contracts. The one loud element is the highlighter. */
+
+:root {
+  --paper: #f7f8fa;
+  --sheet: #ffffff;
+  --ink: #1f2a37;
+  --ink-soft: #566170;
+  --rule: #dde1e6;
+  --redline: #1e5a7a;
+  --highlight: #ffe98a;
+  --highlight-active: #ffd23f;
+  --high: #a8322a;
+  --medium: #9a6408;
+  --low: #5b6472;
+  --focus: #1e5a7a;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #161a20;
+    --sheet: #1c2128;
+    --ink: #e3e6ea;
+    --ink-soft: #9aa3ae;
+    --rule: #2d343d;
+    --redline: #7cb7d6;
+    --highlight: #5a4b12;
+    --highlight-active: #8a6f10;
+    --high: #f0857a;
+    --medium: #e3b14f;
+    --low: #a3acb7;
+    --focus: #7cb7d6;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #161a20;
+  --sheet: #1c2128;
+  --ink: #e3e6ea;
+  --ink-soft: #9aa3ae;
+  --rule: #2d343d;
+  --redline: #7cb7d6;
+  --highlight: #5a4b12;
+  --highlight-active: #8a6f10;
+  --high: #f0857a;
+  --medium: #e3b14f;
+  --low: #a3acb7;
+  --focus: #7cb7d6;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 15px/1.5 "IBM Plex Sans", system-ui, sans-serif;
+}
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+button, input { font: inherit; color: inherit; }
+
+button {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--ink-soft); }
+button.primary { background: var(--redline); border-color: var(--redline); color: var(--sheet); }
+
+a { color: var(--redline); }
+
+.muted { color: var(--ink-soft); }
+
+/* The bar along the top: name, disclaimer, theme and help. */
+.bar {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+.bar .name { font-weight: 600; font-size: 1.05rem; }
+.bar .disclaimer { flex: 1; font-size: 0.85rem; color: var(--ink-soft); }
+
+/* Upload view. */
+.upload {
+  max-width: 640px;
+  margin: 12vh auto 0;
+  padding: 0 16px;
+}
+.upload h1 {
+  font: 600 2rem/1.2 "Source Serif 4", Georgia, serif;
+  margin: 0 0 8px;
+}
+.drop {
+  margin-top: 24px;
+  padding: 40px 24px;
+  border: 1.5px dashed var(--ink-soft);
+  border-radius: 6px;
+  background: var(--sheet);
+  text-align: center;
+}
+.drop.over { border-color: var(--redline); }
+.error { color: var(--high); }
+
+/* Review view: documents, contract, findings. */
+.review {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 380px;
+  height: calc(100vh - 49px);
+}
+.review > * { overflow: auto; }
+
+.docs { border-right: 1px solid var(--rule); padding: 12px 0; }
+.docs h2, .panel h2 { font-size: 0.95rem; font-weight: 600; margin: 0 16px 8px; }
+.docs ul { list-style: none; margin: 0; padding: 0; }
+.docs li button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-radius: 0;
+  padding: 8px 16px;
+  display: grid;
+  gap: 2px;
+}
+.docs li button[aria-current="true"] { background: var(--sheet); box-shadow: inset 3px 0 var(--redline); }
+.docs .doc-name { overflow-wrap: anywhere; }
+.docs .counts { font-size: 0.8rem; display: flex; gap: 8px; }
+.exports { padding: 12px 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.sheet {
+  background: var(--sheet);
+  padding: 32px clamp(16px, 5vw, 56px) 30vh;
+}
+.contract {
+  max-width: 70ch;
+  margin: 0 auto;
+  font: 16px/1.7 "Source Serif 4", Georgia, serif;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+mark {
+  background: var(--highlight);
+  color: inherit;
+  border-radius: 2px;
+  cursor: pointer;
+}
+mark.active { background: var(--highlight-active); box-shadow: 0 2px 0 var(--redline); }
+
+.panel { border-left: 1px solid var(--rule); padding: 12px 0 40px; }
+.panel section { padding: 0 16px 16px; }
+
+.flag { border-left: 3px solid var(--low); padding: 4px 0 4px 10px; margin-bottom: 10px; }
+.flag.high { border-color: var(--high); }
+.flag.medium { border-color: var(--medium); }
+.flag .sev { font-size: 0.8rem; font-weight: 600; }
+.flag.high .sev { color: var(--high); }
+.flag.medium .sev { color: var(--medium); }
+.flag.low .sev { color: var(--low); }
+.flag p { margin: 2px 0; font-size: 0.88rem; }
+
+.type { border-top: 1px solid var(--rule); padding: 8px 0; }
+.type h3 { font-size: 0.92rem; font-weight: 600; margin: 0 0 4px; display: flex; gap: 6px; }
+.type .stakes { font-weight: 400; color: var(--redline); font-size: 0.8rem; }
+.quote {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font: 0.88rem/1.45 "Source Serif 4", Georgia, serif;
+}
+.quote[aria-current="true"] { background: var(--highlight); }
+.quote .where { font: 0.78rem "IBM Plex Sans", sans-serif; color: var(--ink-soft); }
+.missing { font-size: 0.85rem; }
+
+.help {
+  position: fixed;
+  inset: auto 20px 20px auto;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+}
+.help kbd {
+  font: 0.8rem "IBM Plex Sans", sans-serif;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0 5px;
+}
+
+/* On narrow screens the panes stack: documents, findings, then the contract. */
+@media (max-width: 900px) {
+  .review { display: block; height: auto; }
+  .docs, .panel { border: 0; border-bottom: 1px solid var(--rule); }
+  .bar { flex-wrap: wrap; padding: 10px 16px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  mark, .quote { transition: background-color 120ms; }
+}
