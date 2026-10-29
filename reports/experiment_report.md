@@ -230,7 +230,20 @@ What happened:
 
 ### v2 against itself
 
-[Placeholder: filled in when the rerun of llm-qwen7b-v2 on the 23 contracts finishes.]
+llm-qwen7b-v2 was run again on the same 23 contracts with nothing changed (same code, model,
+prompts, cap, temperature 0 and seed), as `llm-qwen7b-v2-rerun`. The comparison is in
+`reports/compare_llm-qwen7b-v2_llm-qwen7b-v2-rerun.md`.
+
+- 90.7% of findings match (824 in both, 25 only in the first run, 59 only in the rerun).
+- High-stakes found F2 is 0.389 for the first run and 0.374 for the rerun at threshold 0.9, a
+  difference of 0.015.
+- The rerun made 154 requests. One hit its cap, the same Coherus chunk (72,797-84,424) at the
+  same length (2,118 tokens, 23 whole items) as in v2. The slowest request took 127.1 s.
+
+So two identical runs differ about as much as v1 and v2 did (87.2% matching, a 0.014 gap). The
+gap between v1 and v2 is about the size of the local LLM's own run-to-run noise, which supports
+using v2. It also means my 95% matching limit was never reachable for the LLM alone on this
+setup; a limit for future runs should be set from this rerun, not assumed.
 
 ## Test results
 
