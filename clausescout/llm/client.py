@@ -18,11 +18,14 @@ load_dotenv()
 
 class OllamaClient:
     def __init__(self, model: str | None = None, host: str | None = None, num_ctx: int = 8192,
-                 timeout: float = 600):
+                 timeout: float = 600, num_predict: int | None = None):
         self.model = model or os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
         self.host = (host or os.getenv("OLLAMA_HOST", "http://localhost:11434")).rstrip("/")
         self.num_ctx = num_ctx
         self.timeout = timeout
+        # A cap on answer length. Without one, an answer that never closes its JSON can run until
+        # the request times out (llm-qwen7b-v1 did, three times, on one validation contract).
+        self.num_predict = num_predict
 
     def chat(self, system: str, user: str, schema: dict | None = None) -> tuple[str, dict]:
         body = {
@@ -33,6 +36,9 @@ class OllamaClient:
             # Temperature 0 and a fixed seed so prompt versions can be compared fairly.
             "options": {"temperature": 0, "seed": 0, "num_ctx": self.num_ctx},
         }
+        # I only send the cap when one is set, so runs without it send exactly what v1 sent.
+        if self.num_predict is not None:
+            body["options"]["num_predict"] = self.num_predict
         if schema is not None:
             # Ollama constrains the output to this JSON schema.
             body["format"] = schema
@@ -44,6 +50,8 @@ class OllamaClient:
         # The context window is kept small to save memory, so I count any request that filled
         # it: its input may have been cut or its answer stopped early.
         usage["context_full"] = int(usage["input_tokens"] + usage["output_tokens"] >= self.num_ctx)
+        # Ollama says "length" when the answer stopped at the cap rather than ending by itself.
+        usage["truncated"] = int(data.get("done_reason") == "length")
         return data["message"]["content"], usage
 
 
@@ -70,6 +78,30 @@ def build_client(backend: str | None = None, **kwargs):
         raise RuntimeError(f"Backend {backend!r} sends text off this machine; set "
                            "ALLOW_HOSTED_LLM=true to allow it.")
     raise NotImplementedError(f"Backend {backend!r} is added at the hosted LLM checkpoint.")
+
+
+def salvage_items(text: str, key: str) -> tuple[list[dict], bool]:
+    """The complete items of a JSON reply {key: [{...}, ...]} that was cut off part way.
+
+    Returns the items that parsed whole, and whether anything was left after the last of them
+    (a half-written item, so at least one answer may be lost).
+    """
+    start = text.find("[", max(text.find(f'"{key}"'), 0))
+    if start == -1:
+        return [], bool(text.strip())
+    decoder, items, pos = json.JSONDecoder(), [], start + 1
+    while True:
+        # Skip the whitespace and commas between items.
+        while pos < len(text) and text[pos] in " \t\r\n,":
+            pos += 1
+        if pos >= len(text) or text[pos] == "]":
+            return items, False
+        try:
+            item, pos = decoder.raw_decode(text, pos)
+        except json.JSONDecodeError:
+            return items, True
+        if isinstance(item, dict):
+            items.append(item)
 
 
 def with_retries(fn, attempts: int = 3, wait: float = 5.0):

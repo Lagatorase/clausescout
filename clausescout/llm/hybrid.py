@@ -14,12 +14,13 @@ adds that the QA model didn't propose for that passage gets 0.5.
 from __future__ import annotations
 
 import json
+import time
 from collections import defaultdict
 from pathlib import Path
 
 from clausescout.data.cuad import CATEGORIES
 from clausescout.findings import Finding
-from clausescout.llm.client import with_retries
+from clausescout.llm.client import salvage_items, with_retries
 from clausescout.llm.extractor import PROMPT_DIR, category_descriptions
 
 
@@ -55,9 +56,12 @@ def load_findings(path: str | Path) -> dict[str, list[Finding]]:
 
 class HybridExtractor:
     def __init__(self, client, candidates, prompt_version: str = "hybrid-v1",
-                 min_prob: float = 0.05, batch: int = 15, max_passage_chars: int = 1500):
+                 min_prob: float = 0.05, batch: int = 15, max_passage_chars: int = 1500,
+                 request_log: str | Path | None = None):
         """candidates is a QA extractor (run live) or a path to saved QA findings."""
         self.client = client
+        # One line per request, as in the LLM method, so truncated requests can be traced.
+        self.request_log = Path(request_log) if request_log else None
         self.name = f"hybrid-{prompt_version}"
         if isinstance(candidates, (str, Path)):
             self._saved, self._qa = load_findings(candidates), None
@@ -70,7 +74,8 @@ class HybridExtractor:
         self.schema = hybrid_schema(list(CATEGORIES))
         self.min_prob, self.batch, self.max_chars = min_prob, batch, max_passage_chars
         self.usage = {"input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "calls": 0,
-                      "bad_json": 0, "passages": 0, "context_full": 0}
+                      "bad_json": 0, "passages": 0, "context_full": 0, "truncated": 0,
+                      "salvaged_items": 0, "truncated_lost": 0}
 
     def _candidates(self, contract_id: str, text: str) -> list[Finding]:
         if self._qa is not None:
@@ -79,20 +84,38 @@ class HybridExtractor:
             found = self._saved.get(contract_id, [])
         return [f for f in found if f.score >= self.min_prob]
 
-    def _ask(self, passages: list[tuple[str, list[str]]]) -> dict[int, list[str]]:
+    def _ask(self, passages: list[tuple[str, list[str]]], contract_id: str = "",
+             batch_no: int = 0) -> dict[int, list[str]]:
         lines = []
         for i, (text, suggested) in enumerate(passages):
             lines.append(f"[{i}] (suggested: {', '.join(suggested)})\n{text[:self.max_chars]}")
+        t0 = time.perf_counter()
         reply, usage = with_retries(
             lambda: self.client.chat(self.system, "\n\n".join(lines), self.schema))
-        for k in ("input_tokens", "output_tokens", "cost_usd", "context_full"):
+        for k in ("input_tokens", "output_tokens", "cost_usd", "context_full", "truncated"):
             self.usage[k] += usage.get(k, 0)
         self.usage["calls"] += 1
+        truncated, lost, items = bool(usage.get("truncated")), False, []
         try:
             items = json.loads(reply).get("passages", [])
         except (json.JSONDecodeError, AttributeError):
-            self.usage["bad_json"] += 1
-            return {}
+            if truncated:
+                # A reply cut at the cap: I keep the passages it answered in full. The rest fall
+                # back to their QA scores, like any passage the LLM skipped.
+                items, lost = salvage_items(reply, "passages")
+                self.usage["salvaged_items"] += len(items)
+                self.usage["truncated_lost"] += int(lost)
+            else:
+                self.usage["bad_json"] += 1
+        if self.request_log:
+            row = {"contract_id": contract_id, "batch": batch_no,
+                   "input_tokens": usage.get("input_tokens", 0),
+                   "output_tokens": usage.get("output_tokens", 0), "truncated": truncated,
+                   "items": len(items), "maybe_lost": lost,
+                   "seconds": round(time.perf_counter() - t0, 1)}
+            self.request_log.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.request_log, "a", encoding="utf-8") as f:
+                f.write(json.dumps(row) + "\n")
         return {int(i["id"]): [t for t in i.get("types", []) if t in CATEGORIES]
                 for i in items if isinstance(i, dict) and "id" in i}
 
@@ -109,7 +132,8 @@ class HybridExtractor:
         out = []
         for b in range(0, len(keys), self.batch):
             chunk = keys[b:b + self.batch]
-            answers = self._ask([(text[s:e], sorted(spans[(s, e)])) for s, e in chunk])
+            answers = self._ask([(text[s:e], sorted(spans[(s, e)])) for s, e in chunk],
+                                contract_id, b // self.batch)
             for i, (s, e) in enumerate(chunk):
                 qa_probs = spans[(s, e)]
                 # If the LLM's reply skipped a passage, I fall back to the QA scores unchanged.

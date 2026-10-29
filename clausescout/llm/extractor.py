@@ -9,12 +9,13 @@ really in the contract, and counts it.
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 from clausescout.data.cuad import CATEGORIES
 from clausescout.findings import Finding
 from clausescout.grounding.verbatim import normalise
-from clausescout.llm.client import with_retries
+from clausescout.llm.client import salvage_items, with_retries
 
 PROMPT_DIR = Path(__file__).parent / "prompts"
 CONFIDENCE = {"high": 0.9, "medium": 0.6, "low": 0.3}
@@ -71,8 +72,12 @@ def chunks(text: str, size: int, overlap: int) -> list[tuple[int, int]]:
 
 class LLMExtractor:
     def __init__(self, client, prompt_version: str = "v1", chunk_chars: int = 12000,
-                 overlap_chars: int = 1500, categories: list[str] | None = None):
+                 overlap_chars: int = 1500, categories: list[str] | None = None,
+                 request_log: str | Path | None = None):
         self.client = client
+        # One line per request (contract, chunk, tokens, truncation), so a run can be checked
+        # request by request. v1 only kept totals per contract.
+        self.request_log = Path(request_log) if request_log else None
         self.prompt_version = prompt_version
         self.name = f"llm-{prompt_version}"
         self.categories = categories or list(CATEGORIES)
@@ -83,25 +88,44 @@ class LLMExtractor:
         self.schema = response_schema(self.categories)
         self.chunk_chars, self.overlap_chars = chunk_chars, overlap_chars
         self.usage = {"input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "calls": 0,
-                      "bad_json": 0, "unknown_type": 0, "context_full": 0}
+                      "bad_json": 0, "unknown_type": 0, "context_full": 0, "truncated": 0,
+                      "salvaged_items": 0, "truncated_lost": 0}
 
-    def _ask(self, excerpt: str) -> list[dict]:
+    def _ask(self, excerpt: str, contract_id: str = "", span: tuple[int, int] = (0, 0)
+             ) -> list[dict]:
+        t0 = time.perf_counter()
         text, usage = with_retries(lambda: self.client.chat(self.system, excerpt, self.schema))
-        for k in ("input_tokens", "output_tokens", "cost_usd", "context_full"):
+        for k in ("input_tokens", "output_tokens", "cost_usd", "context_full", "truncated"):
             self.usage[k] += usage.get(k, 0)
         self.usage["calls"] += 1
+        truncated, lost, items = bool(usage.get("truncated")), False, None
         try:
             items = json.loads(text).get("clauses", [])
         except (json.JSONDecodeError, AttributeError):
-            # A broken reply loses this chunk; I count it rather than hide it.
-            self.usage["bad_json"] += 1
-            return []
-        return [i for i in items if isinstance(i, dict)]
+            if truncated:
+                # An answer cut at the cap isn't valid JSON, so I keep the items that are whole
+                # and count the request, instead of scoring the chunk as nothing found.
+                items, lost = salvage_items(text, "clauses")
+                self.usage["salvaged_items"] += len(items)
+                self.usage["truncated_lost"] += int(lost)
+            else:
+                # A broken reply loses this chunk; I count it rather than hide it.
+                self.usage["bad_json"] += 1
+        if self.request_log:
+            row = {"contract_id": contract_id, "chunk": list(span),
+                   "input_tokens": usage.get("input_tokens", 0),
+                   "output_tokens": usage.get("output_tokens", 0), "truncated": truncated,
+                   "items": len(items or []), "maybe_lost": lost,
+                   "seconds": round(time.perf_counter() - t0, 1)}
+            self.request_log.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.request_log, "a", encoding="utf-8") as f:
+                f.write(json.dumps(row) + "\n")
+        return [i for i in (items or []) if isinstance(i, dict)]
 
     def extract(self, contract_id: str, text: str) -> list[Finding]:
         best: dict[tuple[str, str], Finding] = {}
         for start, end in chunks(text, self.chunk_chars, self.overlap_chars):
-            for item in self._ask(text[start:end]):
+            for item in self._ask(text[start:end], contract_id, (start, end)):
                 cat, quote = item.get("type"), str(item.get("quote", "")).strip()
                 if cat not in self.categories:
                     self.usage["unknown_type"] += 1
