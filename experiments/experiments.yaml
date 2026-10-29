@@ -27,6 +27,22 @@ experiments:
     params: {model_dir: models/qa-small-e4-s0}
     train: "--model microsoft/deberta-v3-small --epochs 4 --lr 3e-5 --batch 4 --accum 8 --seed 0"
 
+  # Second seeds, for run-to-run noise. scripts/run_queue.py runs only the one that matches the
+  # better of the two QA runs above on validation.
+  - name: qa-small-e1-s1
+    method: qa
+    split: val
+    threshold: 0.5
+    params: {model_dir: models/qa-small-e1-s1}
+    train: "--model microsoft/deberta-v3-small --epochs 1 --lr 3e-5 --batch 4 --accum 8 --seed 1"
+
+  - name: qa-small-e4-s1
+    method: qa
+    split: val
+    threshold: 0.5
+    params: {model_dir: models/qa-small-e4-s1}
+    train: "--model microsoft/deberta-v3-small --epochs 4 --lr 3e-5 --batch 4 --accum 8 --seed 1"
+
   # Local LLM via Ollama. Prompts live in clausescout/llm/prompts/<version>.md, one file per
   # version, and every version is tuned on validation only.
   - name: llm-qwen7b-v1
