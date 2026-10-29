@@ -12,20 +12,25 @@ found" never means "absent".
 ## Key findings
 
 Validation results so far (62 CUAD contracts; the 102 test contracts are untouched until the
-final method is chosen):
+final method is chosen). Every method shows at most its top 2 quotes per clause type, and the
+choice is made on high-stakes found F2: F2 over eight high-stakes clause types, where a "yes"
+only counts when it comes with a correct quote.
 
-- The keyword baseline is hard to beat on contract-level precision (0.81 micro precision, 0.76
-  micro F1) and runs in 0.13 s per contract on a CPU.
-- A fine-tuned DeBERTa-v3-small (one epoch on a laptop GPU) ranks spans better at high recall
-  (precision at 80% recall 0.17 against the keywords' 0), but its overall span AUPR (0.288) is
-  below the keywords' 0.334, and its presence scores barely separate real clauses from absent
-  ones.
-- Saying "every clause is present" for every contract, with no quotes at all, scores a mean
-  high-stakes F2 of 0.789. Any contract-level F2 should be read next to that number, so the
-  tables include it as a reference row.
+| Method | High-stakes found F2 | Findings per contract | Seconds per contract |
+|---|---:|---:|---:|
+| Keywords | 0.445 (0.384-0.504) | 19.1 | 0.1 (CPU) |
+| Fine-tuned QA, DeBERTa-v3-small, 1 epoch | 0.703 (0.636-0.759) | 61.2 | 48.9 (laptop GPU) |
 
-Final test numbers, with 95% bootstrap intervals and the CUAD paper's numbers alongside, are
-added after the one test run.
+- Fine-tuned QA quotes the right clause far more often than keywords, but only at a very low
+  threshold (0.05). Its presence scores barely separate real clauses from absent ones, so it
+  shows about three times as many findings for a reviewer to read.
+- On the CUAD paper's span metric, keywords are ahead (AUPR 0.334 against 0.288), while QA
+  ranks better at high recall (precision at 80% recall 0.17 against the keywords' 0).
+- Saying "every clause is present" with no quotes scores a high-stakes presence F2 of 0.789,
+  level with tuned QA. That is why the choice uses found F2, on which it scores 0.
+
+The 4-epoch QA, local LLM and hybrid runs are in progress. Final test numbers, with 95%
+bootstrap intervals and the CUAD paper's numbers alongside, are added after the one test run.
 
 ## How it works
 
@@ -64,6 +69,10 @@ and where?").
 - **Contract level.** Presence precision, recall, F1 and F2 per clause type, plus "found" (the
   clause is present and a correct quote was given) and found F2, which only counts a "yes"
   when it comes with a correct quote. Intervals are 95% bootstrap intervals over contracts.
+- **Choosing the final method.** Each method's threshold, and then the method itself, is chosen
+  by high-stakes found F2 on validation, with every method capped at its top 2 quotes per
+  clause type. The rule, and why it replaced an earlier one that could be won by saying yes,
+  is in `reports/experiment_report.md`.
 
 ### Checked against the official evaluate.py
 
@@ -104,7 +113,12 @@ python scripts/download_data.py                 # CUAD v1, CC BY 4.0
 python scripts/run_experiment.py keywords-v1     # any name from experiments/experiments.yaml
 python scripts/rescore.py keywords-v1            # threshold sweep on validation
 python scripts/make_tables.py --split val --out reports/validation_tables.md
+python scripts/error_analysis.py keywords-v1     # examples of misses and false alarms
 ```
+
+The GPU runs (QA training and validation, the local LLM and the hybrid) take hours on a laptop,
+so `scripts/run_queue.py` runs them one at a time in order. Every job resumes from its
+checkpoint or saved contracts, so the queue can be stopped and restarted.
 
 ## Limitations
 
