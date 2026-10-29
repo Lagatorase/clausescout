@@ -1,7 +1,7 @@
 # What the app runs on uploaded contracts. Override the file with CLAUSESCOUT_CONFIG.
 #
-# The keyword baseline is the default because it runs anywhere with no model download. Once
-# the final method is chosen on validation, its settings go here (method, params, threshold).
+# The keyword baseline is the default because it runs anywhere with no model download (CI and
+# the Docker image use it). The method selected on validation is in config/app-hybrid.yaml.
 method: keywords
 params: {}
 threshold: 0.5

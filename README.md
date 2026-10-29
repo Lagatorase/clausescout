@@ -147,9 +147,15 @@ With Docker: `docker compose up --build`, which publishes the app on 127.0.0.1 o
 ## Usage
 
 **The app.** Start the API, which also serves the built frontend, then open
-http://127.0.0.1:8000 and drop in some contracts. `config/app.yaml` picks the method.
+http://127.0.0.1:8000 and drop in some contracts. The default config (`config/app.yaml`) uses
+keywords, which need no model; `config/app-hybrid.yaml` runs the selected hybrid, which needs the
+trained QA model and Ollama.
 
 ```powershell
+uvicorn api.main:app --host 127.0.0.1 --port 8000
+
+# Or with the selected method
+set CLAUSESCOUT_CONFIG=config/app-hybrid.yaml
 uvicorn api.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -184,7 +190,7 @@ clausescout/
   metrics/            span metrics (CUAD protocol) and contract metrics
   playbook/           YAML risk rules
   report/             Excel and HTML export
-config/app.yaml       which method the app runs
+config/               which method the app runs (keywords by default, or the hybrid)
 datasets/singapore/   manifest of the Singapore contracts (labelling in progress)
 docs/                 data notes, model card, screenshots
 experiments/          experiment configs, splits and saved results
