@@ -3,7 +3,7 @@
 Results go to experiments/results/<name>.json (committed, so the report can be rebuilt) and the
 grounded findings to runs/<name>/findings.jsonl (gitignored, for error analysis and the hybrid).
 
-Usage: python scripts/run_experiment.py keywords-v1 [--limit 5]
+Usage: python scripts/run_experiment.py keywords-v1 [--limit 5] [--param key=value]
 """
 
 import argparse
@@ -29,10 +29,16 @@ def main() -> None:
     ap.add_argument("--limit", type=int, help="only the first N contracts, for a quick check")
     ap.add_argument("--min-free-gb", type=float, default=1.5,
                     help="pause before a contract while less RAM than this is free")
+    ap.add_argument("--param", action="append", default=[], metavar="KEY=VALUE",
+                    help="override one of the config's params; saved with the results")
     args = ap.parse_args()
 
     configs = {e["name"]: e for e in yaml.safe_load(CONFIG.read_text())["experiments"]}
     cfg = configs[args.name]
+    # Overrides go into the config itself, so the results file records what actually ran.
+    for item in args.param:
+        key, _, value = item.partition("=")
+        cfg["params"] = {**cfg.get("params", {}), key: yaml.safe_load(value)}
     split = cfg.get("split", "val")
     # The test split is used once, at the end, so I make running it a deliberate choice.
     if split == "test" and not cfg.get("final", False):
