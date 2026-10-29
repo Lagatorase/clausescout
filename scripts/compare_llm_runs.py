@@ -2,8 +2,9 @@
 
 I use it to check llm-qwen7b-v2 (answer cap) against llm-qwen7b-v1 (no cap) on the 23 contracts
 v1 finished before it failed. Both runs use temperature 0 and a fixed seed, and v2's cap only
-cuts answers that fill the window (one v1 request did), so v2 should reproduce v1 elsewhere. The report says how many findings match and
-compares high-stakes found F2 on those contracts at the same threshold.
+cuts answers that fill the window (one v1 request did), so v2 should reproduce v1 elsewhere.
+The report says how many findings match and compares high-stakes found F2 on those contracts at
+the same threshold.
 
 Usage: python scripts/compare_llm_runs.py llm-qwen7b-v1 llm-qwen7b-v2
 """
