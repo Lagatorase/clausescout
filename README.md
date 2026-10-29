@@ -40,8 +40,17 @@ interval overlaps fine-tuned QA alone, which is simpler and about 1.6 times fast
 
 **Test (102 CUAD contracts, used once):**
 
-<!-- TEST RESULTS: filled in from experiments/results/test-*.json when the test run finishes -->
-[Placeholder: test results are added when the one test run finishes.]
+| Method | High-stakes found F2 | Findings per contract | Span AUPR | Seconds per contract |
+|---|---:|---:|---:|---:|
+| Keywords (regular expressions) | 0.500 (0.432-0.568) | 16.2 | 0.321 | 0.1 (CPU) |
+| Fine-tuned QA, 4 epochs (seed 0) | 0.752 (0.708-0.787) | 35.8 | 0.378 | 48.2 |
+| **Hybrid (selected)** | **0.745 (0.698-0.782)** | **35.3** | **0.427** | 77.6 |
+
+Each method uses the threshold chosen on validation. On test, the selected hybrid did not beat
+fine-tuned QA alone: its found F2 is 0.007 lower, well within error, and QA alone is about 1.6
+times faster. The hybrid still ranks quotes better (span AUPR 0.427 against 0.378) with slightly
+fewer findings. Both are far ahead of keywords. The LLM alone was not run on test (about 4.5 hours
+on this laptop).
 
 ## What I learned
 
@@ -82,7 +91,8 @@ flowchart LR
    paragraphs (DOCX and TXT). Repeated headers and footers and hyphenated line breaks are cleaned.
 2. **Extraction.** The selected method is the hybrid: the fine-tuned QA model proposes candidate
    passages for each clause type, and the local LLM says which clause types each passage really
-   is. Every quote is a span the QA model took straight from the contract.
+   is. Every quote is a span the QA model took straight from the contract. On test it scored level
+   with QA alone, so on a machine without Ollama the QA model by itself is a fair choice.
 3. **Grounding.** Every quote must be in the contract word for word, allowing only typographic
    differences (Unicode forms, curly quotes, soft hyphens, whitespace). Anything else is dropped
    and counted.

@@ -234,9 +234,38 @@ What happened:
 
 ## Test results
 
-[Placeholder: filled in from `experiments/results/test-*.json` when the one test run finishes.
-Keywords, QA (4 epochs, seed 0) and the selected hybrid, each at the threshold chosen on
-validation.]
+CUAD's 102 test contracts, run once on 30 October 2026, after the selection above was written
+down. Each method uses the threshold it got on validation (keywords 0.5, QA 0.1, hybrid 0.15) and
+at most 2 quotes per type. The numbers are from `experiments/results/test-*.json`, with 95%
+bootstrap intervals over contracts (1,000 resamples).
+
+| Method | High-stakes found F2 | Findings per contract | Span AUPR | Seconds per contract |
+|---|---:|---:|---:|---:|
+| Keywords | 0.500 (0.432-0.568) | 16.2 | 0.321 | 0.1 |
+| QA, 4 epochs, seed 0 | 0.752 (0.708-0.787) | 35.8 | 0.378 | 48.2 |
+| Hybrid, qwen7b v2 (selected) | 0.745 (0.698-0.782) | 35.3 | 0.427 | 77.6 |
+
+Other numbers from the same files:
+
+- High-stakes found recall: keywords 0.503, QA 0.916, hybrid 0.898.
+- Micro found F2 over all 41 types: keywords 0.493, QA 0.740, hybrid 0.766.
+- Grounding rejected no quotes for any of the three (4,436, 83,620 and 7,496 submitted).
+- The hybrid's time includes 330 s it spent paused waiting for free memory.
+
+Said plainly:
+
+- The selected hybrid did not beat QA alone on the main measure. Its high-stakes found F2 is
+  0.007 lower, and the two intervals almost coincide. On validation it was 0.017 higher, also
+  within error, so the small edge the selection rested on did not hold on test.
+- QA alone is about 1.6 times faster (48.2 s against 77.6 s per contract) and needs no LLM.
+- The hybrid is better at ranking quotes (span AUPR 0.427 against 0.378) and slightly better
+  over all 41 types (micro found F2 0.766 against 0.740), with a few fewer findings per contract.
+  These are not the measure the selection was made on.
+- Both models are far ahead of keywords (about 0.25 found F2 higher), which matches validation.
+- Keywords did a little better on test than on validation (0.500 against 0.445); QA and the
+  hybrid did a little worse (0.752 against 0.763, 0.745 against 0.780).
+- The LLM alone was not run on test. It would take about 4.5 hours here, over the 3-hour limit
+  I work to without asking, and on validation it was well behind the others.
 
 ## Notes
 
