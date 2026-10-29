@@ -96,7 +96,8 @@ def main() -> None:
         "",
         f"Expected beforehand: at least {MIN_MATCH:.0%} matching and a found F2 gap of at most "
         f"{MAX_F2_GAP}. "
-        + ("Within that, so v2 can stand in for v1." if match >= MIN_MATCH and gap <= MAX_F2_GAP
+        + ("Within that, so the new run can stand in for the old one."
+           if match >= MIN_MATCH and gap <= MAX_F2_GAP
            else "Outside the limits I set beforehand; see the experiment report."),
     ]
     print("\n".join(lines))

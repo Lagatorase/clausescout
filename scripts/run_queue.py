@@ -2,10 +2,12 @@
 
 Jobs: the 4-epoch QA validation run, the hybrid (on candidates from the better QA run), the
 DeBERTa-v3-base timing run, a second seed of the better QA config (training and validation),
-then the qwen2.5:7b run and the hybrid again, both with the answer cap (v2). Every job resumes
-from its checkpoint or partial.jsonl and is skipped if it already finished. Each finished
-validation run is re-scored under selection rule 2 (scripts/rescore.py). A failed job is
-logged and the queue moves on.
+then the qwen2.5:7b run and the hybrid again, both with the answer cap (v2). After those come
+the one test run (keywords, QA, then the selected hybrid) and a rerun of llm-qwen7b-v2 on 23
+validation contracts. Every job resumes from its checkpoint or partial.jsonl and is skipped if
+it already finished; a finished test job is never run again. Each finished validation run is
+re-scored under selection rule 2 (scripts/rescore.py), test runs never are. A failed job is
+logged and the queue moves on. A lock file stops two copies of the queue running at once.
 
 Start, stop and finish times go to runs/queue_log.txt, each job's output to runs/<name>/.
 
@@ -14,6 +16,7 @@ Usage: python scripts/run_queue.py [--dry-run] [--min-free-gb 1.5]
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import urllib.request
@@ -29,6 +32,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "runs"
 RESULTS = ROOT / "experiments" / "results"
 QUEUE_LOG = RUNS / "queue_log.txt"
+LOCK = RUNS / "queue.lock"
 CONFIG = ROOT / "experiments" / "experiments.yaml"
 OLLAMA = "http://localhost:11434"
 
@@ -176,6 +180,38 @@ def jobs(min_free_gb: float) -> list[tuple[str, Callable[[], bool], Callable[[],
         log(f"  validating {name}")
         validate(name, min_free_gb)
 
+    def test_run(name: str, needs_ollama: bool = False, after: str | None = None):
+        # The test set is used once: this resumes a stopped test job from partial.jsonl, and
+        # the queue skips it for good once its results file exists. No re-scoring on test.
+        def run_it() -> None:
+            if after and not (RESULTS / f"{after}.json").exists():
+                raise RuntimeError(f"{after} hasn't finished, and this run needs its findings")
+            if needs_ollama:
+                check_ollama()
+            try:
+                run(python("run_experiment.py", name, "--min-free-gb", str(min_free_gb)),
+                    RUNS / name / "log.txt")
+            finally:
+                if needs_ollama:
+                    unload_ollama()
+        return lambda: (RESULTS / f"{name}.json").exists(), run_it
+
+    rerun_report = ROOT / "reports" / "compare_llm-qwen7b-v2_llm-qwen7b-v2-rerun.md"
+
+    def rerun() -> None:
+        # The same v2 settings again on v1's 23 contracts, then how far the two v2 runs agree.
+        check_ollama()
+        name = "llm-qwen7b-v2-rerun"
+        try:
+            if not (RESULTS / f"{name}.json").exists():
+                run(python("run_experiment.py", name, "--min-free-gb", str(min_free_gb)),
+                    RUNS / name / "log.txt")
+        finally:
+            unload_ollama()
+        threshold = json.loads((RESULTS / "llm-qwen7b-v2.json").read_text(encoding="utf-8"))
+        run(python("compare_llm_runs.py", "llm-qwen7b-v2", name, "--threshold",
+                   str(threshold["threshold"])), RUNS / name / "log.txt")
+
     return [
         ("qa-small-e4-s0 validation", done("qa-small-e4-s0"),
          lambda: validate("qa-small-e4-s0", min_free_gb)),
@@ -186,6 +222,11 @@ def jobs(min_free_gb: float) -> list[tuple[str, Callable[[], bool], Callable[[],
         ("second QA seed", lambda: rescored(second_seed_name()), second_seed),
         ("llm-qwen7b-v2 validation", done("llm-qwen7b-v2"), llm("llm-qwen7b-v2")),
         ("hybrid-qwen7b-v2 validation", done("hybrid-qwen7b-v2"), hybrid("hybrid-qwen7b-v2")),
+        ("TEST keywords", *test_run("test-keywords-v1")),
+        ("TEST qa-small-e4-s0", *test_run("test-qa-small-e4-s0")),
+        ("TEST hybrid-qwen7b-v2", *test_run("test-hybrid-qwen7b-v2", needs_ollama=True,
+                                           after="test-qa-small-e4-s0")),
+        ("llm-qwen7b-v2 rerun on 23 contracts", rerun_report.exists, rerun),
     ]
 
 
@@ -196,6 +237,30 @@ def main() -> None:
                     help="wait before each job, and each contract, while less RAM is free")
     args = ap.parse_args()
 
+    if not args.dry_run:
+        take_lock()
+        try:
+            run_jobs(args)
+        finally:
+            LOCK.unlink(missing_ok=True)
+    else:
+        run_jobs(args)
+
+
+def take_lock() -> None:
+    """Stops a second copy of the queue; a lock left by a queue that died is cleared."""
+    import psutil
+
+    if LOCK.exists():
+        pid = int(LOCK.read_text().strip() or 0)
+        if pid and psutil.pid_exists(pid):
+            raise SystemExit(f"The queue is already running (process {pid}).")
+        log(f"Removed a stale lock from process {pid}")
+    RUNS.mkdir(exist_ok=True)
+    LOCK.write_text(str(os.getpid()))
+
+
+def run_jobs(args) -> None:
     if not args.dry_run:
         log("Queue started")
     for name, finished, start in jobs(args.min_free_gb):
