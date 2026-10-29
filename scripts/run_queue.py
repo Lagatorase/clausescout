@@ -1,10 +1,11 @@
 """Run the remaining GPU queue in order, one job at a time, as its own process.
 
-Jobs: the 4-epoch QA validation run, the qwen2.5:7b validation run, the hybrid (on candidates
-from the better QA run), the DeBERTa-v3-base timing run, then a second seed of the better QA
-config (training and validation). Every job resumes from its checkpoint or partial.jsonl and
-is skipped if it already finished. Each finished validation run is re-scored under selection
-rule 2 (scripts/rescore.py). A failed job is logged and the queue moves on.
+Jobs: the 4-epoch QA validation run, the hybrid (on candidates from the better QA run), the
+DeBERTa-v3-base timing run, a second seed of the better QA config (training and validation),
+then the qwen2.5:7b run and the hybrid again, both with the answer cap (v2). Every job resumes
+from its checkpoint or partial.jsonl and is skipped if it already finished. Each finished
+validation run is re-scored under selection rule 2 (scripts/rescore.py). A failed job is
+logged and the queue moves on.
 
 Start, stop and finish times go to runs/queue_log.txt, each job's output to runs/<name>/.
 
@@ -144,21 +145,24 @@ def jobs(min_free_gb: float) -> list[tuple[str, Callable[[], bool], Callable[[],
     def done(name: str) -> Callable[[], bool]:
         return lambda: rescored(name)
 
-    def hybrid() -> None:
-        check_ollama()
-        source = better_qa()
-        try:
-            validate("hybrid-qwen7b-v1", min_free_gb,
-                     [f"candidates=runs/{source}/findings.jsonl"])
-        finally:
-            unload_ollama()
+    def hybrid(name: str) -> Callable[[], None]:
+        def run_it() -> None:
+            check_ollama()
+            source = better_qa()
+            try:
+                validate(name, min_free_gb, [f"candidates=runs/{source}/findings.jsonl"])
+            finally:
+                unload_ollama()
+        return run_it
 
-    def llm() -> None:
-        check_ollama()
-        try:
-            validate("llm-qwen7b-v1", min_free_gb)
-        finally:
-            unload_ollama()
+    def llm(name: str) -> Callable[[], None]:
+        def run_it() -> None:
+            check_ollama()
+            try:
+                validate(name, min_free_gb)
+            finally:
+                unload_ollama()
+        return run_it
 
     def second_seed_name(quiet: bool = True) -> str:
         return better_qa(quiet).replace("-s0", "-s1")
@@ -175,10 +179,13 @@ def jobs(min_free_gb: float) -> list[tuple[str, Callable[[], bool], Callable[[],
     return [
         ("qa-small-e4-s0 validation", done("qa-small-e4-s0"),
          lambda: validate("qa-small-e4-s0", min_free_gb)),
-        ("llm-qwen7b-v1 validation", done("llm-qwen7b-v1"), llm),
-        ("hybrid-qwen7b-v1 validation", done("hybrid-qwen7b-v1"), hybrid),
+        # llm-qwen7b-v1 is left out: it times out on the same contract every time, so it stays
+        # in the report as an incomplete run and v2 (with an answer cap) replaces it below.
+        ("hybrid-qwen7b-v1 validation", done("hybrid-qwen7b-v1"), hybrid("hybrid-qwen7b-v1")),
         ("deberta-v3-base timing", timing_done, timing),
         ("second QA seed", lambda: rescored(second_seed_name()), second_seed),
+        ("llm-qwen7b-v2 validation", done("llm-qwen7b-v2"), llm("llm-qwen7b-v2")),
+        ("hybrid-qwen7b-v2 validation", done("hybrid-qwen7b-v2"), hybrid("hybrid-qwen7b-v2")),
     ]
 
 
