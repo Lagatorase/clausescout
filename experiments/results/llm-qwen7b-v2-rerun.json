@@ -1,0 +1,1247 @@
+{
+ "name": "llm-qwen7b-v2-rerun",
+ "config": {
+  "name": "llm-qwen7b-v2-rerun",
+  "method": "llm",
+  "split": "val",
+  "threshold": 0.9,
+  "only_contracts_of": "llm-qwen7b-v1",
+  "params": {
+   "backend": "ollama",
+   "model": "qwen2.5:7b",
+   "num_ctx": 6144,
+   "num_predict": "fit",
+   "cap_margin": 16,
+   "timeout": 900,
+   "prompt_version": "v1",
+   "chunk_chars": 12000,
+   "overlap_chars": 1500,
+   "request_log": "runs/llm-qwen7b-v2-rerun/requests.jsonl"
+  }
+ },
+ "split": "val",
+ "finished": "2026-10-29T23:45:06+00:00",
+ "contracts": 23,
+ "threshold": 0.9,
+ "max_per_type": 2,
+ "findings_per_contract": 13.826086956521738,
+ "span": {
+  "overall": {
+   "aupr": 0.1597064669243252,
+   "prec_at_80": 0.0,
+   "prec_at_90": 0.0,
+   "n_gold": 717,
+   "n_contracts": 23,
+   "ci": {}
+  },
+  "macro_aupr": 0.12067941402062073
+ },
+ "contract": {
+  "micro": {
+   "tp": 203,
+   "fp": 37,
+   "fn": 164,
+   "tn": 539,
+   "n_correct": 154,
+   "precision": 0.8458333333333333,
+   "recall": 0.553133514986376,
+   "f1": 0.6688632619439868,
+   "f2": 0.5942622950819673,
+   "span_correct": 0.7586206896551724,
+   "found_recall": 0.4196185286103542,
+   "found_f2": 0.45081967213114754,
+   "ci": {}
+  },
+  "macro": {
+   "precision": 0.7472779745507018,
+   "recall": 0.39651802623110494,
+   "f1": 0.447409372086851,
+   "f2": 0.4092516888810667,
+   "span_correct": 0.6957062594244003,
+   "found_recall": 0.28744626291713066,
+   "found_f2": 0.29451478955731847
+  },
+  "high_stakes": {
+   "precision": 0.7321428571428572,
+   "recall": 0.5131324688532927,
+   "f1": 0.5695839973920602,
+   "f2": 0.5304464808455798,
+   "span_correct": 0.6875946969696969,
+   "found_recall": 0.36443395626748026,
+   "found_f2": 0.3743264126835314
+  },
+  "macro_ci": {},
+  "high_stakes_ci": {}
+ },
+ "per_category": {
+  "Document Name": {
+   "span": {
+    "aupr": 0.354924578527063,
+    "prec_at_80": 0.40816326530612246,
+    "prec_at_90": 0.0,
+    "n_gold": 23,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 23,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "n_correct": 20,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "f2": 1.0,
+    "span_correct": 0.8695652173913043,
+    "found_recall": 0.8695652173913043,
+    "found_f2": 0.8695652173913043,
+    "ci": {}
+   }
+  },
+  "Parties": {
+   "span": {
+    "aupr": 0.4781593406593407,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 112,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 21,
+    "fp": 0,
+    "fn": 2,
+    "tn": 0,
+    "n_correct": 18,
+    "precision": 1.0,
+    "recall": 0.9130434782608695,
+    "f1": 0.9545454545454546,
+    "f2": 0.9292035398230089,
+    "span_correct": 0.8571428571428571,
+    "found_recall": 0.782608695652174,
+    "found_f2": 0.7964601769911505,
+    "ci": {}
+   }
+  },
+  "Agreement Date": {
+   "span": {
+    "aupr": 0.6211180124223602,
+    "prec_at_80": 0.7142857142857143,
+    "prec_at_90": 0.0,
+    "n_gold": 23,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 20,
+    "fp": 0,
+    "fn": 3,
+    "tn": 0,
+    "n_correct": 20,
+    "precision": 1.0,
+    "recall": 0.8695652173913043,
+    "f1": 0.9302325581395349,
+    "f2": 0.8928571428571429,
+    "span_correct": 1.0,
+    "found_recall": 0.8695652173913043,
+    "found_f2": 0.8928571428571429,
+    "ci": {}
+   }
+  },
+  "Effective Date": {
+   "span": {
+    "aupr": 0.18055555555555552,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 24,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 20,
+    "fp": 1,
+    "fn": 2,
+    "tn": 0,
+    "n_correct": 12,
+    "precision": 0.9523809523809523,
+    "recall": 0.9090909090909091,
+    "f1": 0.9302325581395349,
+    "f2": 0.9174311926605505,
+    "span_correct": 0.6,
+    "found_recall": 0.5454545454545454,
+    "found_f2": 0.5504587155963303,
+    "ci": {}
+   }
+  },
+  "Expiration Date": {
+   "span": {
+    "aupr": 0.038461538461538464,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 26,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 4,
+    "fp": 0,
+    "fn": 18,
+    "tn": 1,
+    "n_correct": 2,
+    "precision": 1.0,
+    "recall": 0.18181818181818182,
+    "f1": 0.3076923076923077,
+    "f2": 0.21739130434782608,
+    "span_correct": 0.5,
+    "found_recall": 0.09090909090909091,
+    "found_f2": 0.10869565217391304,
+    "ci": {}
+   }
+  },
+  "Renewal Term": {
+   "span": {
+    "aupr": 0.3181818181818182,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 14,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 9,
+    "fp": 1,
+    "fn": 3,
+    "tn": 10,
+    "n_correct": 7,
+    "precision": 0.9,
+    "recall": 0.75,
+    "f1": 0.8181818181818182,
+    "f2": 0.7758620689655172,
+    "span_correct": 0.7777777777777778,
+    "found_recall": 0.5833333333333334,
+    "found_f2": 0.603448275862069,
+    "ci": {}
+   }
+  },
+  "Notice Period To Terminate Renewal": {
+   "span": {
+    "aupr": 0.06428571428571428,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 10,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 7,
+    "fp": 4,
+    "fn": 2,
+    "tn": 10,
+    "n_correct": 3,
+    "precision": 0.6363636363636364,
+    "recall": 0.7777777777777778,
+    "f1": 0.7,
+    "f2": 0.7446808510638298,
+    "span_correct": 0.42857142857142855,
+    "found_recall": 0.3333333333333333,
+    "found_f2": 0.3191489361702128,
+    "ci": {}
+   }
+  },
+  "Governing Law": {
+   "span": {
+    "aupr": 0.735,
+    "prec_at_80": 0.84,
+    "prec_at_90": 0.0,
+    "n_gold": 24,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 22,
+    "fp": 0,
+    "fn": 1,
+    "tn": 0,
+    "n_correct": 20,
+    "precision": 1.0,
+    "recall": 0.9565217391304348,
+    "f1": 0.9777777777777777,
+    "f2": 0.9649122807017544,
+    "span_correct": 0.9090909090909091,
+    "found_recall": 0.8695652173913043,
+    "found_f2": 0.8771929824561403,
+    "ci": {}
+   }
+  },
+  "Most Favored Nation": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 1,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 1,
+    "tn": 22,
+    "n_correct": 0,
+    "precision": NaN,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Non-Compete": {
+   "span": {
+    "aupr": 0.029411764705882353,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 17,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 4,
+    "fp": 2,
+    "fn": 4,
+    "tn": 13,
+    "n_correct": 2,
+    "precision": 0.6666666666666666,
+    "recall": 0.5,
+    "f1": 0.5714285714285714,
+    "f2": 0.5263157894736842,
+    "span_correct": 0.5,
+    "found_recall": 0.25,
+    "found_f2": 0.2631578947368421,
+    "ci": {}
+   }
+  },
+  "Exclusivity": {
+   "span": {
+    "aupr": 0.005681818181818182,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 22,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 4,
+    "fp": 3,
+    "fn": 6,
+    "tn": 10,
+    "n_correct": 1,
+    "precision": 0.5714285714285714,
+    "recall": 0.4,
+    "f1": 0.47058823529411764,
+    "f2": 0.425531914893617,
+    "span_correct": 0.25,
+    "found_recall": 0.1,
+    "found_f2": 0.10638297872340426,
+    "ci": {}
+   }
+  },
+  "No-Solicit Of Customers": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 2,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 2,
+    "tn": 21,
+    "n_correct": 0,
+    "precision": NaN,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Competitive Restriction Exception": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 3,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 3,
+    "tn": 19,
+    "n_correct": 0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "No-Solicit Of Employees": {
+   "span": {
+    "aupr": 0.2,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 5,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 3,
+    "tn": 19,
+    "n_correct": 1,
+    "precision": 1.0,
+    "recall": 0.25,
+    "f1": 0.4,
+    "f2": 0.29411764705882354,
+    "span_correct": 1.0,
+    "found_recall": 0.25,
+    "found_f2": 0.29411764705882354,
+    "ci": {}
+   }
+  },
+  "Non-Disparagement": {
+   "span": {
+    "aupr": 0.16666666666666666,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 2,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 1,
+    "fp": 2,
+    "fn": 0,
+    "tn": 20,
+    "n_correct": 1,
+    "precision": 0.3333333333333333,
+    "recall": 1.0,
+    "f1": 0.5,
+    "f2": 0.7142857142857143,
+    "span_correct": 1.0,
+    "found_recall": 1.0,
+    "found_f2": 0.7142857142857143,
+    "ci": {}
+   }
+  },
+  "Termination For Convenience": {
+   "span": {
+    "aupr": 0.1937799043062201,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 19,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 8,
+    "fp": 6,
+    "fn": 2,
+    "tn": 7,
+    "n_correct": 7,
+    "precision": 0.5714285714285714,
+    "recall": 0.8,
+    "f1": 0.6666666666666666,
+    "f2": 0.7407407407407407,
+    "span_correct": 0.875,
+    "found_recall": 0.7,
+    "found_f2": 0.6481481481481481,
+    "ci": {}
+   }
+  },
+  "Rofr/Rofo/Rofn": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 6,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 2,
+    "tn": 21,
+    "n_correct": 0,
+    "precision": NaN,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Change Of Control": {
+   "span": {
+    "aupr": 0.020833333333333332,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 16,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 1,
+    "fp": 2,
+    "fn": 5,
+    "tn": 15,
+    "n_correct": 1,
+    "precision": 0.3333333333333333,
+    "recall": 0.16666666666666666,
+    "f1": 0.2222222222222222,
+    "f2": 0.18518518518518517,
+    "span_correct": 1.0,
+    "found_recall": 0.16666666666666666,
+    "found_f2": 0.18518518518518517,
+    "ci": {}
+   }
+  },
+  "Anti-Assignment": {
+   "span": {
+    "aupr": 0.26129032258064516,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 31,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 10,
+    "fp": 0,
+    "fn": 9,
+    "tn": 4,
+    "n_correct": 9,
+    "precision": 1.0,
+    "recall": 0.5263157894736842,
+    "f1": 0.6896551724137931,
+    "f2": 0.5813953488372093,
+    "span_correct": 0.9,
+    "found_recall": 0.47368421052631576,
+    "found_f2": 0.5232558139534884,
+    "ci": {}
+   }
+  },
+  "Revenue/Profit Sharing": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 18,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 2,
+    "fp": 0,
+    "fn": 8,
+    "tn": 13,
+    "n_correct": 0,
+    "precision": 1.0,
+    "recall": 0.2,
+    "f1": 0.3333333333333333,
+    "f2": 0.23809523809523808,
+    "span_correct": 0.0,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Price Restrictions": {
+   "span": {
+    "aupr": NaN,
+    "prec_at_80": NaN,
+    "prec_at_90": NaN,
+    "n_gold": 0,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 2,
+    "fn": 0,
+    "tn": 21,
+    "n_correct": 0,
+    "precision": 0.0,
+    "recall": NaN,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": NaN,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Minimum Commitment": {
+   "span": {
+    "aupr": 0.05128205128205128,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 26,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 2,
+    "fp": 0,
+    "fn": 9,
+    "tn": 12,
+    "n_correct": 2,
+    "precision": 1.0,
+    "recall": 0.18181818181818182,
+    "f1": 0.3076923076923077,
+    "f2": 0.21739130434782608,
+    "span_correct": 1.0,
+    "found_recall": 0.18181818181818182,
+    "found_f2": 0.21739130434782608,
+    "ci": {}
+   }
+  },
+  "Volume Restriction": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 3,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 3,
+    "tn": 19,
+    "n_correct": 0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Ip Ownership Assignment": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 17,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 3,
+    "fp": 2,
+    "fn": 2,
+    "tn": 16,
+    "n_correct": 0,
+    "precision": 0.6,
+    "recall": 0.6,
+    "f1": 0.6,
+    "f2": 0.6,
+    "span_correct": 0.0,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Joint Ip Ownership": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 4,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 2,
+    "tn": 20,
+    "n_correct": 0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "License Grant": {
+   "span": {
+    "aupr": 0.19285714285714284,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 42,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 8,
+    "fp": 0,
+    "fn": 7,
+    "tn": 8,
+    "n_correct": 7,
+    "precision": 1.0,
+    "recall": 0.5333333333333333,
+    "f1": 0.6956521739130435,
+    "f2": 0.5882352941176471,
+    "span_correct": 0.875,
+    "found_recall": 0.4666666666666667,
+    "found_f2": 0.5147058823529411,
+    "ci": {}
+   }
+  },
+  "Non-Transferable License": {
+   "span": {
+    "aupr": 0.013157894736842105,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 19,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 4,
+    "fp": 0,
+    "fn": 7,
+    "tn": 12,
+    "n_correct": 1,
+    "precision": 1.0,
+    "recall": 0.36363636363636365,
+    "f1": 0.5333333333333333,
+    "f2": 0.4166666666666667,
+    "span_correct": 0.25,
+    "found_recall": 0.09090909090909091,
+    "found_f2": 0.10416666666666667,
+    "ci": {}
+   }
+  },
+  "Affiliate License-Licensor": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 3,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 2,
+    "tn": 21,
+    "n_correct": 0,
+    "precision": NaN,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Affiliate License-Licensee": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 7,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 3,
+    "tn": 20,
+    "n_correct": 0,
+    "precision": NaN,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Unlimited/All-You-Can-Eat-License": {
+   "span": {
+    "aupr": NaN,
+    "prec_at_80": NaN,
+    "prec_at_90": NaN,
+    "n_gold": 0,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 0,
+    "tn": 22,
+    "n_correct": 0,
+    "precision": 0.0,
+    "recall": NaN,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": NaN,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Irrevocable Or Perpetual License": {
+   "span": {
+    "aupr": 0.09523809523809523,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 14,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 3,
+    "fp": 0,
+    "fn": 3,
+    "tn": 17,
+    "n_correct": 2,
+    "precision": 1.0,
+    "recall": 0.5,
+    "f1": 0.6666666666666666,
+    "f2": 0.5555555555555556,
+    "span_correct": 0.6666666666666666,
+    "found_recall": 0.3333333333333333,
+    "found_f2": 0.37037037037037035,
+    "ci": {}
+   }
+  },
+  "Source Code Escrow": {
+   "span": {
+    "aupr": 0.06666666666666667,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 15,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 1,
+    "tn": 21,
+    "n_correct": 1,
+    "precision": 1.0,
+    "recall": 0.5,
+    "f1": 0.6666666666666666,
+    "f2": 0.5555555555555556,
+    "span_correct": 1.0,
+    "found_recall": 0.5,
+    "found_f2": 0.5555555555555556,
+    "ci": {}
+   }
+  },
+  "Post-Termination Services": {
+   "span": {
+    "aupr": 0.03333333333333333,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 30,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 5,
+    "fp": 2,
+    "fn": 8,
+    "tn": 8,
+    "n_correct": 3,
+    "precision": 0.7142857142857143,
+    "recall": 0.38461538461538464,
+    "f1": 0.5,
+    "f2": 0.423728813559322,
+    "span_correct": 0.6,
+    "found_recall": 0.23076923076923078,
+    "found_f2": 0.2542372881355932,
+    "ci": {}
+   }
+  },
+  "Audit Rights": {
+   "span": {
+    "aupr": 0.16842105263157894,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 38,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 5,
+    "fp": 0,
+    "fn": 7,
+    "tn": 11,
+    "n_correct": 5,
+    "precision": 1.0,
+    "recall": 0.4166666666666667,
+    "f1": 0.5882352941176471,
+    "f2": 0.4716981132075472,
+    "span_correct": 1.0,
+    "found_recall": 0.4166666666666667,
+    "found_f2": 0.4716981132075472,
+    "ci": {}
+   }
+  },
+  "Uncapped Liability": {
+   "span": {
+    "aupr": 0.047619047619047616,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 12,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 5,
+    "fp": 2,
+    "fn": 4,
+    "tn": 12,
+    "n_correct": 2,
+    "precision": 0.7142857142857143,
+    "recall": 0.5555555555555556,
+    "f1": 0.625,
+    "f2": 0.5813953488372093,
+    "span_correct": 0.4,
+    "found_recall": 0.2222222222222222,
+    "found_f2": 0.23255813953488372,
+    "ci": {}
+   }
+  },
+  "Cap On Liability": {
+   "span": {
+    "aupr": 0.060810810810810814,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 37,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 3,
+    "fp": 0,
+    "fn": 12,
+    "tn": 8,
+    "n_correct": 2,
+    "precision": 1.0,
+    "recall": 0.2,
+    "f1": 0.3333333333333333,
+    "f2": 0.23809523809523808,
+    "span_correct": 0.6666666666666666,
+    "found_recall": 0.13333333333333333,
+    "found_f2": 0.15873015873015872,
+    "ci": {}
+   }
+  },
+  "Liquidated Damages": {
+   "span": {
+    "aupr": 0.2,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 5,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 3,
+    "tn": 19,
+    "n_correct": 1,
+    "precision": 1.0,
+    "recall": 0.25,
+    "f1": 0.4,
+    "f2": 0.29411764705882354,
+    "span_correct": 1.0,
+    "found_recall": 0.25,
+    "found_f2": 0.29411764705882354,
+    "ci": {}
+   }
+  },
+  "Warranty Duration": {
+   "span": {
+    "aupr": 0.02222222222222222,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 15,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 2,
+    "fp": 1,
+    "fn": 4,
+    "tn": 16,
+    "n_correct": 1,
+    "precision": 0.6666666666666666,
+    "recall": 0.3333333333333333,
+    "f1": 0.4444444444444444,
+    "f2": 0.37037037037037035,
+    "span_correct": 0.5,
+    "found_recall": 0.16666666666666666,
+    "found_f2": 0.18518518518518517,
+    "ci": {}
+   }
+  },
+  "Insurance": {
+   "span": {
+    "aupr": 0.08653846153846154,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 26,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 4,
+    "fp": 0,
+    "fn": 5,
+    "tn": 14,
+    "n_correct": 3,
+    "precision": 1.0,
+    "recall": 0.4444444444444444,
+    "f1": 0.6153846153846154,
+    "f2": 0.5,
+    "span_correct": 0.75,
+    "found_recall": 0.3333333333333333,
+    "found_f2": 0.375,
+    "ci": {}
+   }
+  },
+  "Covenant Not To Sue": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 3,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 3,
+    "tn": 20,
+    "n_correct": 0,
+    "precision": NaN,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  },
+  "Third Party Beneficiary": {
+   "span": {
+    "aupr": 0.0,
+    "prec_at_80": 0.0,
+    "prec_at_90": 0.0,
+    "n_gold": 3,
+    "n_contracts": 23,
+    "ci": {}
+   },
+   "contract": {
+    "tp": 0,
+    "fp": 3,
+    "fn": 3,
+    "tn": 17,
+    "n_correct": 0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "span_correct": NaN,
+    "found_recall": 0.0,
+    "found_f2": 0.0,
+    "ci": {}
+   }
+  }
+ },
+ "high_stakes_types": [
+  "Cap On Liability",
+  "Uncapped Liability",
+  "Termination For Convenience",
+  "Change Of Control",
+  "Anti-Assignment",
+  "Exclusivity",
+  "Non-Compete",
+  "Governing Law"
+ ],
+ "grounding": {
+  "submitted": 883,
+  "accepted": 574,
+  "rejected": 309,
+  "rejection_rate": 0.34994337485843713,
+  "rejected_examples": [
+   {
+    "contract": "2ThemartComInc_19990826_10-12G_EX-10.10_6700288_EX-10.10_Co-Branding Agreement_ Agency Agreement",
+    "category": "Parties",
+    "text": "I-ESCROW, INC., 2THEMART.COM, INC."
+   },
+   {
+    "contract": "ACCURAYINC_09_01_2010-EX-10.31-DISTRIBUTOR AGREEMENT",
+    "category": "Parties",
+    "text": "ACCURAY INCORPORATED, SIEMENS AKTIENGESELLSCHAFT"
+   },
+   {
+    "contract": "ACCURAYINC_09_01_2010-EX-10.31-DISTRIBUTOR AGREEMENT",
+    "category": "Change Of Control",
+    "text": "If a Termination Election relating to this Agreement is made pursuant to Section 10.3 of the Strategic Alliance Agreement prior to such termination, this Agreement shall terminate 36 months after such Termination Election (the"
+   },
+   {
+    "contract": "ACCURAYINC_09_01_2010-EX-10.31-DISTRIBUTOR AGREEMENT",
+    "category": "Change Of Control",
+    "text": "This Agreement may be assigned by a Party in connection with a Change in Control of such party, subject to the specific termination and other rights set forth in the Strategic"
+   },
+   {
+    "contract": "ACCURAYINC_09_01_2010-EX-10.31-DISTRIBUTOR AGREEMENT",
+    "category": "Parties",
+    "text": "ACCURAY INCORPORATED:             Siemens AG"
+   },
+   {
+    "contract": "ACCURAYINC_09_01_2010-EX-10.31-DISTRIBUTOR AGREEMENT",
+    "category": "Termination For Convenience",
+    "text": "12.7. Both parties prohibit the harassment of their employees and contractors in any form. They consider harassment of, or  discrimination against, their employees and affiliated persons a very serious matter and will investigate all complaints of  inappropriate conduct. Where the investigation uncover harassment or discrimination, the other party may take  reasonable corrective action, including, without limitation, termination of this Agreement for material breach."
+   },
+   {
+    "contract": "ACCURAYINC_09_01_2010-EX-10.31-DISTRIBUTOR AGREEMENT",
+    "category": "No-Solicit Of Employees",
+    "text": "12.7. Both parties prohibit the harassment of their employees and contractors in any form. They consider harassment of, or  discrimination against, their employees and affiliated persons a very serious matter and will investigate all complaints of  inappropriate conduct. Where the investigation uncover harassment or discrimination, the other party may take  reasonable corrective action, including, without limitation, termination of this Agreement for material breach."
+   },
+   {
+    "contract": "ACCURAYINC_09_01_2010-EX-10.31-DISTRIBUTOR AGREEMENT",
+    "category": "Post-Termination Services",
+    "text": "12.12. The expiration or termination of this Agreement for any reason will not release either party from any liabilities or obligations  set forth herein which (i) the parties have expressly agreed will survive any such expiration or termination; or (ii) remain to be  performed or by their nature would be intended to be applicable following any such termination or expiration."
+   },
+   {
+    "contract": "ACCURAYINC_09_01_2010-EX-10.31-DISTRIBUTOR AGREEMENT",
+    "category": "Audit Rights",
+    "text": "12.8. Notices. All notices and other communications hereunder shall be in writing and shall be deemed duly given (a) on the date of delivery  if delivered personally, (b) if by facsimile, upon written or electronic confirmation of receipt (if sent during business hours of the  recipient, otherwise on the next business day following such confirmation), (c) on the first business day following the date of  dispatch if delivered utilizing a next-day service by a recognized next-day courier, (d) on t"
+   },
+   {
+    "contract": "ACCURAYINC_09_01_2010-EX-10.31-DISTRIBUTOR AGREEMENT",
+    "category": "Uncapped Liability",
+    "text": "12.11. If any provision of this Agreement is held invalid or unenforceable by a court of competent jurisdiction, the remaining  provisions of the Agreement will remain in full force and effect, and the provision affected will be construed so as to be enforceable  to the maximum extent permissible by law."
+   },
+   {
+    "contract": "ALAMOGORDOFINANCIALCORP_12_16_1999-EX-1-AGENCY AGREEMENT",
+    "category": "Governing Law",
+    "text": "This Agreement shall remain in full force and effect, regardless of any termination or cancellation of this Agreement or any investigation made by or on behalf of the Agent, the Company, the MHC, the Bank or any controlling person referred to in Section 8 hereof, and shall survive the issuance of the Shares, and any successor or assign of the Agent, the Company, the MHC, the Bank, and any such controlling person shall be entitled to the benefit of the respective agreements, indemnities, warranti"
+   },
+   {
+    "contract": "ALAMOGORDOFINANCIALCORP_12_16_1999-EX-1-AGENCY AGREEMENT",
+    "category": "Uncapped Liability",
+    "text": "The indemnifying parties shall not be liable for the fees and expenses of more than one separate firm of attorneys (and any special counsel that said firm may retain) for each indemnified party in connection with any one action, proceeding or claim or separate but similar or related actions, proceedings or claims in the same jurisdiction arising out of the same general allegations or circumstances."
+   },
+   {
+    "contract": "AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT",
+    "category": "Parties",
+    "text": "Mutual Insurance Corporation of America, a Michigan insurance corporation (MICOA) and Stratton, Cheeseman & Walsh-Nevada, Inc., a Nevada corporation, (sometimes commonly referred to as the Parties)"
+   },
+   {
+    "contract": "AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT",
+    "category": "Agreement Date",
+    "text": "not explicitly stated in the excerpt"
+   },
+   {
+    "contract": "AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT",
+    "category": "Effective Date",
+    "text": "not explicitly stated in the excerpt"
+   },
+   {
+    "contract": "AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT",
+    "category": "Governing Law",
+    "text": "not explicitly stated in the excerpt"
+   },
+   {
+    "contract": "AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT",
+    "category": "Most Favored Nation",
+    "text": "not explicitly stated in the excerpt"
+   },
+   {
+    "contract": "AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT",
+    "category": "No-Solicit Of Customers",
+    "text": "not explicitly stated in the excerpt"
+   },
+   {
+    "contract": "AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT",
+    "category": "No-Solicit Of Employees",
+    "text": "not explicitly stated in the excerpt"
+   },
+   {
+    "contract": "AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT",
+    "category": "Non-Disparagement",
+    "text": "not explicitly stated in the excerpt"
+   }
+  ]
+ },
+ "time": {
+  "total_s": 3985.7078885000665,
+  "per_contract_s": 173.29164732608984,
+  "max_contract_s": 423.74613109999336,
+  "paused_for_memory_s": 1470.0
+ },
+ "usage": {
+  "input_tokens": 576400,
+  "output_tokens": 58217,
+  "cost_usd": 0.0,
+  "calls": 154,
+  "bad_json": 0,
+  "unknown_type": 0,
+  "context_full": 0,
+  "truncated": 1,
+  "salvaged_items": 23,
+  "truncated_lost": 1
+ },
+ "cost_per_contract_usd": 0.0,
+ "hardware": {
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cpu": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+  "ram_gb": 15.2,
+  "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU (6.0 GB)"
+ },
+ "git_commit": "1f2e827"
+}
