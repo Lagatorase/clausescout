@@ -73,6 +73,7 @@ of them. Span AUPR uses every finding, uncapped.
 | keywords-v1 | 0.5 | 0.334 (0.298-0.371) | 0.445 (0.384-0.504) | 19.1 | 0.1 |
 | qa-small-e1-s0 | 0.05 | 0.288 (0.259-0.314) | 0.703 (0.636-0.759) | 61.2 | 48.9 |
 | qa-small-e4-s0 | 0.1 | 0.391 (0.358-0.424) | 0.763 (0.696-0.820) | 41.8 | 52.4 |
+| qa-small-e4-s1 (second seed) | 0.05 | 0.399 (0.369-0.432) | 0.771 (0.712-0.819) | 44.5 | 48.9 |
 | hybrid-qwen7b-v1 (QA 4 epochs + qwen2.5:7b) | 0.15 | 0.451 (0.404-0.492) | 0.780 (0.717-0.833) | 39.9 | 87.5 |
 
 What these show so far:
@@ -169,5 +170,8 @@ before using v2 in the selection. The comparison is written by
 
 - Price Restrictions has no test contracts (13 train, 2 validation, 0 test), so it has no test
   score; the CUAD paper notes the same. It is still trained on and scored on validation.
-- Run-to-run noise: a second QA seed has not been run yet. Until it is, the only noise
-  estimate is the bootstrap interval over contracts, which does not cover training variation.
+- Run-to-run noise: a second seed of the 4-epoch QA config (seed 1) scores high-stakes found F2
+  0.771 against seed 0's 0.763, span AUPR 0.399 against 0.391, and picks threshold 0.05 against
+  0.1. A gap of about 0.01 between seeds is much smaller than the bootstrap intervals (about
+  0.11 wide), so with two seeds the training noise looks small next to the noise from having
+  only 62 validation contracts. Two seeds is a thin basis for that.
