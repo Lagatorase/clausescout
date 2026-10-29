@@ -20,7 +20,10 @@ await page.goto("http://127.0.0.1:8000/");
 await page.waitForSelector("input[type=file]");
 await shot(1400);
 await page.setInputFiles("input[type=file]", files);
-await page.waitForSelector("mark", { timeout: 120000 });
+// A frame while it works, then up to 20 minutes for the hybrid to finish on the laptop.
+await page.waitForTimeout(1500);
+await shot(1200);
+await page.waitForSelector("mark", { timeout: 20 * 60 * 1000 });
 await page.waitForTimeout(400);
 await shot(1400);
 // Step through quotes the way a reviewer would, with j.
@@ -33,11 +36,13 @@ for (let i = 0; i < 4; i++) {
 await page.locator(".flag button").first().click();
 await page.waitForTimeout(700);
 await shot(1400);
-// Next contract, then dark mode.
-await page.keyboard.press("n");
-await page.waitForSelector("mark");
-await page.waitForTimeout(500);
-await shot(1100);
+// Next contract, if there is more than one, then dark mode.
+if (files.length > 1) {
+  await page.keyboard.press("n");
+  await page.waitForSelector("mark");
+  await page.waitForTimeout(500);
+  await shot(1100);
+}
 await page.keyboard.press("t");
 await page.keyboard.press("t");
 await page.waitForTimeout(300);
