@@ -113,9 +113,10 @@ class LLMExtractor:
                 self.usage["bad_json"] += 1
         if self.request_log:
             row = {"contract_id": contract_id, "chunk": list(span),
-                   "input_tokens": usage.get("input_tokens", 0),
-                   "output_tokens": usage.get("output_tokens", 0), "truncated": truncated,
-                   "items": len(items or []), "maybe_lost": lost,
+                   "prompt_tokens": usage.get("input_tokens", 0),
+                   "prompt_tokens_local": usage.get("prompt_tokens_local"),
+                   "output_tokens": usage.get("output_tokens", 0), "cap": usage.get("cap"),
+                   "cap_hit": truncated, "items": len(items or []), "maybe_lost": lost,
                    "seconds": round(time.perf_counter() - t0, 1)}
             self.request_log.parent.mkdir(parents=True, exist_ok=True)
             with open(self.request_log, "a", encoding="utf-8") as f:

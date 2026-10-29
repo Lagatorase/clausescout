@@ -54,16 +54,18 @@ experiments:
     params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 6144, prompt_version: v1,
              chunk_chars: 12000, overlap_chars: 1500}
 
-  # One change from llm-qwen7b-v1: answers are capped at 6,144 tokens (num_predict). v1 failed
-  # on validation contract 24 when one request generated until it timed out three times at
-  # 600 s. The cap is set from v1's 23 finished contracts (experiment report, "Answer cap").
-  # Every request is logged, and a request cut at the cap keeps its whole items and is counted.
+  # One change from llm-qwen7b-v1: an answer cap. v1 failed on validation contract 24 when one
+  # request generated until it timed out three times at 600 s. Each answer is capped at what the
+  # 6,144-token window has left after its prompt, minus 16 tokens (num_predict: fit), so an
+  # answer that fits is never cut. The timeout is 900 s, so the cap always ends a runaway answer
+  # first. Every request is logged; one cut at the cap keeps its whole items and is counted.
   - name: llm-qwen7b-v2
     method: llm
     split: val
     threshold: 0.5
-    params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 6144, num_predict: 6144,
-             prompt_version: v1, chunk_chars: 12000, overlap_chars: 1500,
+    params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 6144, num_predict: fit,
+             cap_margin: 16, timeout: 900, prompt_version: v1, chunk_chars: 12000,
+             overlap_chars: 1500,
              request_log: runs/llm-qwen7b-v2/requests.jsonl}
 
   # The local LLM confirms or rejects QA candidates (QA probability at least 0.05) from the
@@ -77,14 +79,14 @@ experiments:
              candidates: runs/qa-small-e4-s0/findings.jsonl, min_prob: 0.05, batch: 8,
              max_passage_chars: 1500}
 
-  # One change from hybrid-qwen7b-v1: the same 6,144-token answer cap as llm-qwen7b-v2. v1
+  # One change from hybrid-qwen7b-v1: the same answer cap and timeout as llm-qwen7b-v2. v1
   # finished without a timeout, but it used the same uncapped client, so it could have hit the
   # same problem. Candidates come from the better QA run on validation, set by run_queue.py.
   - name: hybrid-qwen7b-v2
     method: hybrid
     split: val
     threshold: 0.5
-    params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 6144, num_predict: 6144,
-             prompt_version: hybrid-v1, candidates: runs/qa-small-e4-s0/findings.jsonl,
+    params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 6144, num_predict: fit,
+             cap_margin: 16, timeout: 900, prompt_version: hybrid-v1, candidates: runs/qa-small-e4-s0/findings.jsonl,
              min_prob: 0.05, batch: 8, max_passage_chars: 1500,
              request_log: runs/hybrid-qwen7b-v2/requests.jsonl}
