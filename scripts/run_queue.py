@@ -210,6 +210,10 @@ def main() -> None:
         log(f"START {name}")
         try:
             start()
+        except KeyboardInterrupt:
+            # Ctrl+C reaches the job and the queue together, so I log it and stop the queue.
+            log(f"STOPPED {name} (interrupted; rerun the queue to resume)")
+            raise SystemExit(1) from None
         except Exception as e:  # noqa: BLE001
             # One failed job shouldn't hold up the rest of the queue.
             log(f"FAILED {name}: {e}")
