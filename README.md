@@ -3,7 +3,10 @@
 A local-first contract review assistant for due diligence: it finds 41 kinds of clause, quotes
 each one word for word with its page, and flags risks against a playbook, all on your own machine.
 
-<!-- DEMO GIF: added after the app recording (docs/demo.gif) -->
+![Uploading one CUAD validation contract, stepping through its quotes and playbook flags](docs/demo.gif)
+
+*One CUAD validation contract through the selected hybrid. The wait while it runs (about 1.5
+minutes per contract on the laptop) is cut from the recording.*
 
 **ClauseScout is a review aid, not legal advice.** It misses clauses and mislabels some. Every
 finding is a verbatim quote, so it can be checked against the contract in seconds, and "not
@@ -172,6 +175,16 @@ uvicorn api.main:app --host 127.0.0.1 --port 8000
 Each contract gets its findings by clause type, with the quote highlighted in the text, the
 playbook flags, and Excel and HTML downloads. Keyboard: j/k for quotes, n/p for contracts, t for
 the theme, ? for help.
+
+The screenshots use one CUAD validation contract (a 1999 co-branding agreement) and the hybrid.
+
+| Upload | Results, with a flagged clause |
+|---|---|
+| ![The upload page](docs/images/upload.png) | ![A contract with its uncapped liability clause highlighted next to the playbook flags](docs/images/results.png) |
+
+The Excel report (first rows of its Flags and Findings sheets):
+
+![The Flags and Findings sheets of the Excel report](docs/images/excel-preview.png)
 
 **The experiments.**
 
