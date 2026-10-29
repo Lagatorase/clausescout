@@ -44,6 +44,12 @@ def main() -> None:
     if split == "test" and not cfg.get("final", False):
         sys.exit("Test-split runs need final: true in the config.")
     contracts = load_split(split)[: args.limit]
+    # A rerun can be limited to the contracts an earlier run finished, so the two compare.
+    if cfg.get("only_contracts_of"):
+        with open(ROOT / "runs" / cfg["only_contracts_of"] / "partial.jsonl",
+                  encoding="utf-8") as f:
+            keep = {json.loads(line)["contract_id"] for line in f}
+        contracts = [c for c in contracts if c.id in keep]
     (ROOT / "runs" / args.name).mkdir(parents=True, exist_ok=True)
 
     method = build_method(cfg["method"], cfg.get("params"))
