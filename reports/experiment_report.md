@@ -94,6 +94,64 @@ What these show so far:
   absent ones. That is what the hybrid method builds on: the local LLM confirms or rejects QA's
   candidates.
 
+## Local LLM: an incomplete run and an answer cap
+
+### llm-qwen7b-v1 did not finish
+
+The first local LLM run (qwen2.5:7b through Ollama, no limit on answer length) finished 23 of
+the 62 validation contracts and then failed twice on contract 24, once with 1 GB of RAM free
+and once with about 5 GB free. Each time, one request ran until it hit the client's 600 s
+timeout, three tries in a row, and the run stopped. Decoding is deterministic (temperature 0,
+fixed seed), so the same chunk gets the same answer every time, and retrying cannot help. My
+reading, which the logs support but do not prove, is that the model started an answer it never
+closed: with the context window full, Ollama keeps generating until something stops it.
+
+This is a finding about running local LLMs unattended, not only a bug in my run. A hosted API
+returns an error or a cut answer within a bounded time; a local server will happily spend hours
+on one request. Without a cap on answer length, a single chunk can stall an overnight run, and a
+retry policy makes it worse rather than better. v1 stays in this report as an incomplete run
+(23 of 62 contracts) and is not part of the selection.
+
+### Answer cap (llm-qwen7b-v2)
+
+v2 is v1 with one change: answers are capped at 6,144 tokens (Ollama's `num_predict`). The
+prompt, chunking (12,000 characters, 1,500 overlap), context window (6,144 tokens), temperature
+and seed are the same.
+
+How I set the cap from v1's 23 finished contracts:
+
+- v1 kept token counts per contract, not per request, so the longest single answer isn't known
+  exactly. v2 logs every request (`runs/llm-qwen7b-v2/requests.jsonl`).
+- 154 requests, 56,165 output tokens: 365 per request on average. The mean per request in a
+  contract ranges from 31 to 1,022 (median 458).
+- The longest answer is at least 1,023 tokens: one contract had 2 requests and 2,045 output
+  tokens.
+- No v1 request reached 6,144 tokens. In 153 of the 154, the prompt plus the answer fitted
+  inside the 6,144-token window, so the answer was shorter than that. The remaining one filled
+  the window, but its whole contract produced 6,021 output tokens, so it was shorter too.
+- A cap of 6,144 is therefore above every v1 answer, so it does not change any answer that ended
+  by itself. It is 3 times the longest answer if that answer was at most 2,048 tokens. I can't
+  confirm that from v1's totals, so I will check it in v2's request log. A higher cap would not
+  help: no answer that ends by itself can be longer than the window, and at the observed
+  14 tokens per second, 6,144 tokens take about 7 minutes, which already sits close to the 600 s
+  timeout.
+
+A request that stops at the cap is counted, and its log line says which contract and chunk it
+came from. Its complete findings are kept (the JSON is parsed up to the last whole item), and
+the log says whether a half-written item was lost. It is not scored as "nothing found".
+
+The hybrid used the same uncapped client. It finished without a timeout, but it could have hit
+the same problem, so it is rerun with the same cap as hybrid-qwen7b-v2, on the same candidates.
+
+### Checking v2 against v1
+
+Before v2 ran, I set what counts as the same result on the 23 contracts v1 finished: at least
+95% of findings (same contract, type and quote) in both runs, and a difference in high-stakes
+found F2 of at most 0.02 at the same threshold. With deterministic decoding and a cap no v1
+answer reached, the runs should agree almost exactly. If they differ by more, I look into why
+before using v2 in the selection. The comparison is written by
+`scripts/compare_llm_runs.py`.
+
 ## Notes
 
 - Price Restrictions has no test contracts (13 train, 2 validation, 0 test), so it has no test
