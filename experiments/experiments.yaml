@@ -90,3 +90,44 @@ experiments:
              cap_margin: 16, timeout: 900, prompt_version: hybrid-v1, candidates: runs/qa-small-e4-s0/findings.jsonl,
              min_prob: 0.05, batch: 8, max_passage_chars: 1500,
              request_log: runs/hybrid-qwen7b-v2/requests.jsonl}
+
+  # A second run of llm-qwen7b-v2 with nothing changed, on the 23 validation contracts v1
+  # finished, to measure how much the local LLM varies between identical runs.
+  - name: llm-qwen7b-v2-rerun
+    method: llm
+    split: val
+    threshold: 0.9
+    only_contracts_of: llm-qwen7b-v1
+    params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 6144, num_predict: fit,
+             cap_margin: 16, timeout: 900, prompt_version: v1, chunk_chars: 12000,
+             overlap_chars: 1500, request_log: runs/llm-qwen7b-v2-rerun/requests.jsonl}
+
+  # The one test run (CUAD's 102 test contracts), used once at the end. Each threshold is the
+  # one chosen on validation under rule 2, and nothing here is tuned on test. The hybrid is the
+  # method rule 2 selected; keywords and QA run as baselines. The hybrid's candidates are the
+  # QA test run's findings, from the same QA model (4 epochs, seed 0) it used on validation.
+  - name: test-keywords-v1
+    method: keywords
+    split: test
+    final: true
+    threshold: 0.5
+    n_boot: 1000
+
+  - name: test-qa-small-e4-s0
+    method: qa
+    split: test
+    final: true
+    threshold: 0.1
+    n_boot: 1000
+    params: {model_dir: models/qa-small-e4-s0}
+
+  - name: test-hybrid-qwen7b-v2
+    method: hybrid
+    split: test
+    final: true
+    threshold: 0.15
+    n_boot: 1000
+    params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 6144, num_predict: fit,
+             cap_margin: 16, timeout: 900, prompt_version: hybrid-v1,
+             candidates: runs/test-qa-small-e4-s0/findings.jsonl, min_prob: 0.05, batch: 8,
+             max_passage_chars: 1500, request_log: runs/test-hybrid-qwen7b-v2/requests.jsonl}
