@@ -21,6 +21,7 @@ only counts when it comes with a correct quote.
 | Keywords | 0.445 (0.384-0.504) | 19.1 | 0.1 (CPU) |
 | Fine-tuned QA, DeBERTa-v3-small, 1 epoch | 0.703 (0.636-0.759) | 61.2 | 48.9 (laptop GPU) |
 | Fine-tuned QA, DeBERTa-v3-small, 4 epochs | 0.763 (0.696-0.820) | 41.8 | 52.4 (laptop GPU) |
+| Hybrid: qwen2.5:7b checks the 4-epoch QA candidates | 0.780 (0.717-0.833) | 39.9 | 87.5 (laptop GPU) |
 
 - Fine-tuned QA quotes the right clause far more often than keywords, but only at a very low
   threshold (0.05). Its presence scores barely separate real clauses from absent ones, so it
@@ -30,7 +31,8 @@ only counts when it comes with a correct quote.
 - Saying "every clause is present" with no quotes scores a high-stakes presence F2 of 0.789,
   level with tuned QA. That is why the choice uses found F2, on which it scores 0.
 
-The local LLM and hybrid runs are in progress. Final test numbers, with 95%
+The hybrid is a little ahead of QA alone, but the intervals overlap. The local LLM on its own
+and a second QA seed are still running. Final test numbers, with 95%
 bootstrap intervals and the CUAD paper's numbers alongside, are added after the one test run.
 
 ## How it works
