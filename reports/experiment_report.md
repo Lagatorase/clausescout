@@ -63,30 +63,30 @@ differences), and the metrics only see what survives.
 
 The full tables are in `reports/validation_tables.md`, generated from
 `experiments/results/`. Each method's contract-level threshold was picked by
-`scripts/rescore.py`, the same way for every method (highest mean high-stakes F2 on validation),
-so validation scores are slightly optimistic for all of them.
+`scripts/rescore.py` under rule 2, the same way for every method (highest mean high-stakes found
+F2 on validation, top 2 quotes per type), so validation scores are slightly optimistic for all
+of them. Span AUPR uses every finding, uncapped.
 
-| Method | Span AUPR | High-stakes F2 | High-stakes found F2 | Seconds per contract |
-|---|---:|---:|---:|---:|
-| always-present | 0.000 | 0.789 (0.735-0.829) | 0.000 | 0 |
-| keywords-v1 | 0.334 (0.298-0.371) | 0.688 (0.632-0.735) | 0.517 (0.451-0.578) | 0.1 |
-| qa-small-e1-s0 (threshold 0.05) | 0.288 (0.259-0.314) | 0.805 (0.752-0.841) | 0.762 (0.704-0.807) | 48.9 |
+| Method | Threshold | Span AUPR | High-stakes found F2 | Findings per contract | Seconds per contract |
+|---|---:|---:|---:|---:|---:|
+| always-present | n/a | 0.000 | 0.000 | 41.0 | 0 |
+| keywords-v1 | 0.5 | 0.334 (0.298-0.371) | 0.445 (0.384-0.504) | 19.1 | 0.1 |
+| qa-small-e1-s0 | 0.05 | 0.288 (0.259-0.314) | 0.703 (0.636-0.759) | 61.2 | 48.9 |
 
 What these show so far:
 
-- **The rule as written can be won by saying yes.** About half of the high-stakes (contract,
-  clause type) pairs have the clause, and at that base rate F2 rewards predicting "present"
-  everywhere: always-present scores 0.789 without quoting anything. The threshold sweep pushed
-  QA to 0.05, where it predicts nearly every clause type in every contract. QA is level with
-  always-present on high-stakes F2 (overlapping intervals), so on this metric the fine-tuned
-  model shows no measurable gain over saying yes. I have not changed the rule; the choice is
-  left as an open question.
+- **QA (1 epoch) leads on the selection metric.** Its high-stakes found F2 of 0.703 is above
+  keywords' 0.445, and the intervals don't overlap. Always-present scores 0, as intended: it
+  quotes nothing.
+- **QA still prefers the lowest threshold.** Even with the top 2 cap, dropping its low-score
+  quotes loses more correct quotes than it saves false alarms. At 0.05 it shows 61 findings per
+  contract, about three times what keywords show.
 - **Keywords beat QA on span AUPR** (0.334 against 0.288), but QA ranks better at high recall
   (precision at 80% recall 0.171 against 0). Keywords never reach 80% recall at any threshold.
 - **QA's presence score is weak, its candidate list is strong.** High-stakes precision stays
   between 0.44 and 0.53 whatever the threshold, so the score barely separates real clauses from
-  absent ones. But at 0.05 it quotes a correct span for 94% of present high-stakes clauses,
-  which is what the hybrid method builds on.
+  absent ones. That is what the hybrid method builds on: the local LLM confirms or rejects QA's
+  candidates.
 
 ## Notes
 
