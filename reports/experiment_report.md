@@ -72,9 +72,14 @@ of them. Span AUPR uses every finding, uncapped.
 | always-present | n/a | 0.000 | 0.000 | 41.0 | 0 |
 | keywords-v1 | 0.5 | 0.334 (0.298-0.371) | 0.445 (0.384-0.504) | 19.1 | 0.1 |
 | qa-small-e1-s0 | 0.05 | 0.288 (0.259-0.314) | 0.703 (0.636-0.759) | 61.2 | 48.9 |
+| qa-small-e4-s0 | 0.1 | 0.391 (0.358-0.424) | 0.763 (0.696-0.820) | 41.8 | 52.4 |
 
 What these show so far:
 
+- **Four epochs help QA on every measure, but the gain is within the noise.** Against one
+  epoch, high-stakes found F2 rises from 0.703 to 0.763 with overlapping intervals, span AUPR
+  from 0.288 to 0.391 (now above keywords' 0.334), and findings per contract fall from 61.2 to
+  41.8 because the chosen threshold rises from 0.05 to 0.1. Only one seed has been run so far.
 - **QA (1 epoch) leads on the selection metric.** Its high-stakes found F2 of 0.703 is above
   keywords' 0.445, and the intervals don't overlap. Always-present scores 0, as intended: it
   quotes nothing.
