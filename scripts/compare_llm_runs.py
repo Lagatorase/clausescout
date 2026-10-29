@@ -1,8 +1,8 @@
 """Compare two local LLM runs on the validation contracts both of them finished.
 
 I use it to check llm-qwen7b-v2 (answer cap) against llm-qwen7b-v1 (no cap) on the 23 contracts
-v1 finished before it failed. Both runs use temperature 0 and a fixed seed, and no v1 request
-came near the cap, so v2 should reproduce v1 there. The report says how many findings match and
+v1 finished before it failed. Both runs use temperature 0 and a fixed seed, and v2's cap only
+cuts answers that fill the window (one v1 request did), so v2 should reproduce v1 elsewhere. The report says how many findings match and
 compares high-stakes found F2 on those contracts at the same threshold.
 
 Usage: python scripts/compare_llm_runs.py llm-qwen7b-v1 llm-qwen7b-v2
@@ -18,8 +18,8 @@ from clausescout.findings import Finding
 from clausescout.grounding.verbatim import GroundingIndex, ground_findings, normalise
 
 ROOT = Path(__file__).resolve().parents[1]
-# Set before v2 ran: with deterministic decoding and a cap that no v1 answer reached, more
-# difference than this means the runs aren't comparable and I check with you first.
+# Set before v2 ran: with deterministic decoding and a cap that only cuts window-filling answers,
+# more difference than this means the runs aren't comparable and I check with you first.
 MIN_MATCH = 0.95
 MAX_F2_GAP = 0.02
 

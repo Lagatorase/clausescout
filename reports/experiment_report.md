@@ -114,41 +114,54 @@ retry policy makes it worse rather than better. v1 stays in this report as an in
 
 ### Answer cap (llm-qwen7b-v2)
 
-v2 is v1 with one change: answers are capped at 6,144 tokens (Ollama's `num_predict`). The
-prompt, chunking (12,000 characters, 1,500 overlap), context window (6,144 tokens), temperature
-and seed are the same.
+v2 is v1 with one change: a cap on each answer's length (Ollama's `num_predict`), plus a longer
+request timeout so the cap, not the timeout, ends a runaway answer. The prompt, chunking (12,000
+characters, 1,500 overlap), context window (6,144 tokens), temperature and seed are the same.
 
-How I set the cap from v1's 23 finished contracts:
+The prompt and the answer share the 6,144-token window, so an answer that ends by itself can't be
+longer than the window minus its prompt. A fixed cap doesn't fit that: prompts vary, and Ollama
+doesn't stop when the window is full but shifts the context and carries on. So each request's cap
+is set from its own prompt:
 
-- v1 kept token counts per contract, not per request, so the longest single answer isn't known
-  exactly. v2 logs every request (`runs/llm-qwen7b-v2/requests.jsonl`).
-- 154 requests, 56,165 output tokens: 365 per request on average. The mean per request in a
-  contract ranges from 31 to 1,022 (median 458).
-- The longest answer is at least 1,023 tokens: one contract had 2 requests and 2,045 output
+- cap = 6,144 minus the prompt's tokens minus a margin of 16 tokens, and at least 64.
+- Ollama can't count a prompt's tokens before the request, so I count them with the model's own
+  tokenizer and chat template (Qwen2.5). On v1's 154 requests this matched Ollama's own prompt
+  count (`prompt_eval_count`) exactly, to the token, for all 23 contracts.
+- v1's prompts ran from 1,841 to 5,069 tokens, so caps run from about 4,287 down to about 1,059
   tokens.
-- No v1 request reached 6,144 tokens. In 153 of the 154, the prompt plus the answer fitted
-  inside the 6,144-token window, so the answer was shorter than that. The remaining one filled
-  the window, but its whole contract produced 6,021 output tokens, so it was shorter too.
-- A cap of 6,144 is therefore above every v1 answer, so it does not change any answer that ended
-  by itself. It is 3 times the longest answer if that answer was at most 2,048 tokens. I can't
-  confirm that from v1's totals, so I will check it in v2's request log. A higher cap would not
-  help: no answer that ends by itself can be longer than the window, and at the observed
-  14 tokens per second, 6,144 tokens take about 7 minutes, which already sits close to the 600 s
-  timeout.
+- Any answer that fits in the window is never cut, except one that comes within 16 tokens of
+  filling it. An answer that would have overflowed the window stops when the window is full.
+- The request timeout goes from 600 s to 900 s. A full window of answer is at most about 4,300
+  tokens, about 5 minutes at the roughly 14 tokens per second v1 managed, so the cap always ends
+  a runaway answer before the timeout.
+
+What v1 tells me about answer lengths (it kept token counts per contract, not per request):
+
+- 154 requests and 56,165 output tokens, 365 per request on average. The mean per request in a
+  contract ranges from 31 to 1,022 (median 458). The longest answer is at least 1,023 tokens
+  (one contract had 2 requests and 2,045 output tokens).
+- One v1 request filled the window. Under v2's cap it would be cut, so v2 should differ from v1
+  on that contract. Any other v1 request that came within 16 tokens of filling the window would
+  be cut too; I can't tell from v1's totals whether there were any.
+- v2 logs every request (`runs/llm-qwen7b-v2/requests.jsonl`): prompt tokens (Ollama's count and
+  mine), output tokens, the cap applied and whether it was hit. The longest answer that ended by
+  itself, and how far it was below its cap, will come from that log.
 
 A request that stops at the cap is counted, and its log line says which contract and chunk it
 came from. Its complete findings are kept (the JSON is parsed up to the last whole item), and
 the log says whether a half-written item was lost. It is not scored as "nothing found".
 
 The hybrid used the same uncapped client. It finished without a timeout, but it could have hit
-the same problem, so it is rerun with the same cap as hybrid-qwen7b-v2, on the same candidates.
+the same problem, so it is rerun as hybrid-qwen7b-v2 with the same per-request cap and timeout,
+on the same candidates.
 
 ### Checking v2 against v1
 
 Before v2 ran, I set what counts as the same result on the 23 contracts v1 finished: at least
 95% of findings (same contract, type and quote) in both runs, and a difference in high-stakes
-found F2 of at most 0.02 at the same threshold. With deterministic decoding and a cap no v1
-answer reached, the runs should agree almost exactly. If they differ by more, I look into why
+found F2 of at most 0.02 at the same threshold. With deterministic decoding and a cap that only cuts answers that
+fill the window, the runs should agree almost exactly, apart from the contract with v1's one
+window-filling request. If they differ by more, I look into why
 before using v2 in the selection. The comparison is written by
 `scripts/compare_llm_runs.py`.
 
