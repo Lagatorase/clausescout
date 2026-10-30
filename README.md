@@ -70,8 +70,9 @@ on this laptop).
   model. I replaced it with found F2 (which that dummy scores 0 on) and a cap of 2 quotes per
   clause type, before any test contract was used, and wrote down why.
 - **The local LLM wasn't reproducible run to run, even at temperature 0 with a fixed seed.** Two
-  runs with the same prompts agreed on 87.2% of findings. The hybrid, whose answers are short,
-  reproduced exactly. A local model also needs a cap on answer length: without one, a single
+  versions (before and after the answer cap) agreed on 87.2% of findings, and two identical runs
+  of the same version agreed on 90.7%, so the variation comes from the model itself rather than
+  the answer cap. The hybrid, whose answers are short, reproduced exactly. A local model also needs a cap on answer length: without one, a single
   answer that never ended stalled an overnight run.
 
 ## How it works
