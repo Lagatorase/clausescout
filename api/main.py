@@ -32,7 +32,7 @@ from clausescout.playbook.engine import load_playbook
 from clausescout.report.export import DISCLAIMER, render_html, write_excel
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG_PATH = Path(os.environ.get("CLAUSESCOUT_CONFIG", ROOT / "config" / "app.yaml"))
+CONFIG_PATH = Path(os.environ.get("CLAUSESCOUT_CONFIG", ROOT / "config" / "app-qa.yaml"))
 EXPORT_DIR = Path(os.environ.get("CLAUSESCOUT_EXPORTS", ROOT / "runs" / "app_exports"))
 WEB_DIST = ROOT / "web" / "dist"
 

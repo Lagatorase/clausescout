@@ -1,0 +1,11 @@
+# The app's default: the fine-tuned QA model alone (DeBERTa-v3-small, 4 epochs, seed 0), with the
+# threshold chosen on validation. The hybrid (config/app-hybrid.yaml) was the method selected by
+# rule 2, but QA alone scored level with it on test and is faster with no Ollama.
+# It needs the trained QA model in models/qa-small-e4-s0.
+method: qa
+params: {model_dir: models/qa-small-e4-s0}
+threshold: 0.1
+playbook: clausescout/playbook/default.yaml
+# Upload limits, so one huge file can't stall the single worker.
+max_file_mb: 25
+max_files: 50

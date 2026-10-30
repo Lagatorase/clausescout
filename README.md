@@ -96,7 +96,7 @@ flowchart LR
 2. **Extraction.** The selected method is the hybrid: the fine-tuned QA model proposes candidate
    passages for each clause type, and the local LLM says which clause types each passage really
    is. Every quote is a span the QA model took straight from the contract. On test it scored level
-   with QA alone, so on a machine without Ollama the QA model by itself is a fair choice.
+   with QA alone, which is faster and needs no Ollama, so the app runs QA alone by default.
 3. **Grounding.** Every quote must be in the contract word for word, allowing only typographic
    differences (Unicode forms, curly quotes, soft hyphens, whitespace). Anything else is dropped
    and counted.
@@ -156,21 +156,24 @@ cd web; npm ci; npm run build; cd ..
 
 For the local LLM, install [Ollama](https://ollama.com) and run `ollama pull qwen2.5:7b`.
 
-With Docker: `docker compose up --build`, which publishes the app on 127.0.0.1 only.
+With Docker: `docker compose up --build`, which publishes the app on 127.0.0.1 only. The image
+has no trained model, so it runs keywords.
 
 ## Usage
 
 **The app.** Start the API, which also serves the built frontend, then open
-http://127.0.0.1:8000 and drop in some contracts. The default config (`config/app.yaml`) uses
-keywords, which need no model; `config/app-hybrid.yaml` runs the selected hybrid, which needs the
-trained QA model and Ollama.
+http://127.0.0.1:8000 and drop in some contracts. The hybrid was the method selected by the
+rule, but fine-tuned QA alone scored level with it on test and is faster with no Ollama, so the
+app defaults to QA alone (`config/app-qa.yaml`, which needs the trained model in `models/`).
+`config/app-hybrid.yaml` runs the hybrid (QA model plus Ollama), and `config/app-keywords.yaml`
+runs keywords, which need no model at all.
 
 ```powershell
 uvicorn api.main:app --host 127.0.0.1 --port 8000
 
-# Or with the selected method
+# Or the hybrid, or keywords with no model
 set CLAUSESCOUT_CONFIG=config/app-hybrid.yaml
-uvicorn api.main:app --host 127.0.0.1 --port 8000
+set CLAUSESCOUT_CONFIG=config/app-keywords.yaml
 ```
 
 Each contract gets its findings by clause type, with the quote highlighted in the text, the
@@ -214,7 +217,7 @@ clausescout/
   metrics/            span metrics (CUAD protocol) and contract metrics
   playbook/           YAML risk rules
   report/             Excel and HTML export
-config/               which method the app runs (keywords by default, or the hybrid)
+config/               which method the app runs (QA by default, the hybrid, or keywords)
 datasets/singapore/   manifest of the Singapore contracts (labelling in progress)
 docs/                 data notes, model card, screenshots
 experiments/          experiment configs, splits and saved results

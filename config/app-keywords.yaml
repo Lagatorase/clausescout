@@ -1,0 +1,9 @@
+# The keyword baseline: runs anywhere with no model download, so the tests, CI and the Docker
+# image use it. Use it with: set CLAUSESCOUT_CONFIG=config/app-keywords.yaml
+method: keywords
+params: {}
+threshold: 0.5
+playbook: clausescout/playbook/default.yaml
+# Upload limits, so one huge file can't stall the single worker.
+max_file_mb: 25
+max_files: 50
