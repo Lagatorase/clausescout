@@ -31,3 +31,6 @@ Thumbs.db
 # Portable tools and browsers for screenshots, kept inside the project
 /tools/
 web/*.tsbuildinfo
+
+# Working notes stay local
+reports/progress_log.md
