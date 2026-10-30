@@ -202,8 +202,8 @@ What happened:
   them with a capped request (Coherus) accounts for only 2. Two other contracts gained 35 and 36
   findings with no request anywhere near its cap.
 - The 95% limit was set assuming Ollama is near-deterministic at temperature 0 with a fixed
-  seed. That assumption was wrong: the same prompts got different answers in two runs. The
-  decision was to accept v2 for the selection on that basis. A rerun of v2 on the same 23
+  seed. That assumption was wrong: the same prompts got different answers in two runs. I
+  accepted v2 for the selection on that basis, since the F2 gap was inside its limit. A rerun of v2 on the same 23
   contracts, with nothing changed, measures how much two identical runs differ (below).
 - The hybrid did reproduce: hybrid v1 and v2 agree on all 5,146 findings, with the same scores.
   Its answers are short lists of clause types (the longest was 239 tokens), while the LLM-only

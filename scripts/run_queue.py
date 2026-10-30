@@ -1,5 +1,8 @@
 """Run the remaining GPU queue in order, one job at a time, as its own process.
 
+I moved the long GPU jobs into a separate queue because background jobs were being stopped
+when memory ran low.
+
 Jobs: the 4-epoch QA validation run, the hybrid (on candidates from the better QA run), the
 DeBERTa-v3-base timing run, a second seed of the better QA config (training and validation),
 then the qwen2.5:7b run and the hybrid again, both with the answer cap (v2). After those come
