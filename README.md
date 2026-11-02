@@ -154,17 +154,31 @@ pip install -e . --no-deps
 cd web; npm ci; npm run build; cd ..
 ```
 
+No training is needed to use the app. The fine-tuned QA model is published on Hugging Face
+([model card](https://huggingface.co/Lagatorase/clausescout-deberta-v3-small-cuad)).
+On the first run, if `models/qa-small-e4-s0` has no model, the app downloads it (about 570 MB)
+into the normal Hugging Face cache, pinned to the exact commit I uploaded, and reuses it after
+that. A model you train yourself in `models/` always takes priority.
+
+To reproduce the model instead (it trains on a 6 GB laptop GPU):
+
+```powershell
+python scripts/download_data.py      # CUAD v1, CC BY 4.0
+python scripts/train_qa.py --model microsoft/deberta-v3-small --out models/qa-small-e4-s0 --epochs 4 --lr 3e-5 --batch 4 --accum 8 --seed 0
+```
+
 For the local LLM, install [Ollama](https://ollama.com) and run `ollama pull qwen2.5:7b`.
 
 With Docker: `docker compose up --build`, which publishes the app on 127.0.0.1 only. The image
-has no trained model, so it runs keywords.
+doesn't include the model, so it runs keywords.
 
 ## Usage
 
 **The app.** Start the API, which also serves the built frontend, then open
 http://127.0.0.1:8000 and drop in some contracts. The hybrid was the method selected by the
 rule, but fine-tuned QA alone scored level with it on test and is faster with no Ollama, so the
-app defaults to QA alone (`config/app-qa.yaml`, which needs the trained model in `models/`).
+app defaults to QA alone (`config/app-qa.yaml`, using `models/` or the
+[published model](https://huggingface.co/Lagatorase/clausescout-deberta-v3-small-cuad)).
 `config/app-hybrid.yaml` runs the hybrid (QA model plus Ollama), and `config/app-keywords.yaml`
 runs keywords, which need no model at all.
 
@@ -273,5 +287,6 @@ and Spencer Ball (NeurIPS 2021, [arXiv:2103.06268](https://arxiv.org/abs/2103.06
 Atticus Project, and is licensed under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). It is downloaded by
 `scripts/download_data.py`, not redistributed here. The fine-tuned model is based on
-`microsoft/deberta-v3-small` (MIT licence); the local LLM is Qwen2.5-7B-Instruct (Apache 2.0)
-run through Ollama.
+`microsoft/deberta-v3-small` (MIT licence), and its weights are published on
+[Hugging Face](https://huggingface.co/Lagatorase/clausescout-deberta-v3-small-cuad) under
+CC BY 4.0, following CUAD. The local LLM is Qwen2.5-7B-Instruct (Apache 2.0) run through Ollama.
