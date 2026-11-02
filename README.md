@@ -235,7 +235,7 @@ config/               which method the app runs (QA by default, the hybrid, or k
 datasets/singapore/   manifest of the Singapore contracts (labelling in progress)
 docs/                 data notes, model card, screenshots
 experiments/          experiment configs, splits and saved results
-reports/              experiment report, tables, error analyses, progress log
+reports/              experiment report, tables, error analyses
 scripts/              training, experiments, queue, tables, data tools
 tests/                pytest suite
 web/                  React and TypeScript frontend
@@ -248,18 +248,23 @@ web/                  React and TypeScript frontend
 - **Singapore set: labelling in progress.** `datasets/singapore/manifest.yaml` lists 15 public
   Singapore-law commercial agreements from SEC EDGAR, with source URLs. To fetch them, set a
   User-Agent with your contact details (SEC requires one) and run the fetch script, then label
-  them in the local labelling page, which starts with no labels and never shows model output:
+  them in the local labelling page, which starts with no labels and never shows model output.
+  Each contract gets 11 decisions: the 8 high-stakes types, plus arbitration, SIAC arbitration
+  and data protection for the three playbook rules CUAD can't measure. The evaluation script then
+  scores keywords, QA and the hybrid with their CUAD validation thresholds, nothing retuned:
 
   ```powershell
   set SEC_USER_AGENT=Your Name your.email@example.com
   python scripts/fetch_singapore.py
   python scripts/label_tool.py
+  python scripts/eval_singapore.py
   ```
 
   There are no Singapore results yet.
 - **Scanned PDFs need OCR first.** The app warns when a PDF has almost no text.
-- **Three playbook rules are unmeasured.** Arbitration, SIAC and data protection have no CUAD
-  label, so those rules search the whole text and their accuracy isn't known.
+- **Three playbook rules are unmeasured so far.** Arbitration, SIAC and data protection have no
+  CUAD label, so those rules search the whole text. The Singapore labels will give their first
+  precision and recall.
 - **Validation scores are slightly optimistic,** because thresholds were tuned on the same 62
   contracts. The test run is the honest number.
 - **The local LLM isn't reproducible run to run,** even at temperature 0, so LLM results carry
