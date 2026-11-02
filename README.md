@@ -285,7 +285,7 @@ web/                  React and TypeScript frontend
 
 ## Licence and data credits
 
-Code under the MIT licence (see `LICENSE`).
+Code under the MIT licence (see `LICENSE`). The data notice is in `NOTICE`.
 
 The Contract Understanding Atticus Dataset (CUAD) is by Dan Hendrycks, Collin Burns, Anya Chen
 and Spencer Ball (NeurIPS 2021, [arXiv:2103.06268](https://arxiv.org/abs/2103.06268)), from The
