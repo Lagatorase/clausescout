@@ -1,10 +1,13 @@
 # The method selected on validation (rule 2, reports/experiment_report.md): the local LLM checks
 # candidates from the fine-tuned QA model, with the same settings and threshold as
-# hybrid-qwen7b-v2. It needs the trained QA model in models/ and Ollama with qwen2.5:7b.
+# hybrid-qwen7b-v2. It needs Ollama with qwen2.5:7b; the QA model comes from models/ or, if it
+# isn't there, from the Hugging Face Hub (as in config/app-qa.yaml).
 # Use it with: set CLAUSESCOUT_CONFIG=config/app-hybrid.yaml
 method: hybrid
 params: {backend: ollama, model: "qwen2.5:7b", num_ctx: 6144, num_predict: fit, cap_margin: 16,
          timeout: 900, prompt_version: hybrid-v1, qa_model_dir: models/qa-small-e4-s0,
+         qa_hub_repo: Lagatorase/clausescout-deberta-v3-small-cuad,
+         qa_hub_revision: 888b9a29202c934b57a92d679395b949abf6a1f2,
          min_prob: 0.05, batch: 8, max_passage_chars: 1500}
 threshold: 0.15
 playbook: clausescout/playbook/default.yaml

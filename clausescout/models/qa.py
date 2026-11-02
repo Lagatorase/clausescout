@@ -159,23 +159,43 @@ def _softmax(scores: list[float]) -> list[float]:
     return [e / total for e in exps]
 
 
+def resolve_model(model_dir: str | Path, hub_repo: str | None = None,
+                  hub_revision: str | None = None) -> tuple[str | Path, str | None, Path]:
+    """Where to load the model from: (source, revision, path to questions.json).
+
+    A model I trained myself in model_dir always wins. Without one, I fall back to the published
+    weights on the Hugging Face Hub, pinned to one commit so the app never picks up a changed
+    model, and stored in the normal Hugging Face cache after the first download.
+    """
+    local = Path(model_dir)
+    if (local / "config.json").exists():
+        return local, None, local / "questions.json"
+    if not hub_repo:
+        raise FileNotFoundError(f"No QA model in {local} and no hub_repo to download it from")
+    from huggingface_hub import hf_hub_download
+
+    questions = hf_hub_download(hub_repo, "questions.json", revision=hub_revision)
+    return hub_repo, hub_revision, Path(questions)
+
+
 class QAExtractor:
     """Runs a fine-tuned QA model over every window and question of a contract."""
 
     name = "qa"
 
     def __init__(self, model_dir: str | Path, batch_size: int = 64, device: str | None = None,
-                 categories: list[str] | None = None):
+                 categories: list[str] | None = None, hub_repo: str | None = None,
+                 hub_revision: str | None = None):
         from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 
-        model_dir = Path(model_dir)
+        source, revision, questions_path = resolve_model(model_dir, hub_repo, hub_revision)
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.tok = AutoTokenizer.from_pretrained(model_dir)
+        self.tok = AutoTokenizer.from_pretrained(source, revision=revision)
         # I load fp32 weights explicitly and run in bf16 through autocast, never in fp16.
         self.model = AutoModelForQuestionAnswering.from_pretrained(
-            model_dir, dtype=torch.float32).to(self.device)
+            source, revision=revision, dtype=torch.float32).to(self.device)
         self.model.eval()
-        questions = json.loads((model_dir / "questions.json").read_text(encoding="utf-8"))
+        questions = json.loads(Path(questions_path).read_text(encoding="utf-8"))
         if categories:
             questions = {c: q for c, q in questions.items() if c in categories}
         self.windows = Windows(self.tok, questions)

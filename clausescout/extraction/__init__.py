@@ -34,6 +34,8 @@ def build_method(method: str, params: dict | None = None):
         client = build_client(**{k: params.pop(k) for k in client_keys if k in params})
         # Candidates come from saved QA findings (validation runs) or a live QA model (the app).
         if "qa_model_dir" in params:
-            params["candidates"] = QAExtractor(params.pop("qa_model_dir"))
+            params["candidates"] = QAExtractor(params.pop("qa_model_dir"),
+                                               hub_repo=params.pop("qa_hub_repo", None),
+                                               hub_revision=params.pop("qa_hub_revision", None))
         return HybridExtractor(client, **params)
     raise ValueError(f"Unknown method {method!r}")
