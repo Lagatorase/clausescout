@@ -185,9 +185,9 @@ runs keywords, which need no model at all.
 ```powershell
 uvicorn api.main:app --host 127.0.0.1 --port 8000
 
-# Or the hybrid, or keywords with no model
-set CLAUSESCOUT_CONFIG=config/app-hybrid.yaml
-set CLAUSESCOUT_CONFIG=config/app-keywords.yaml
+# Or choose another config first, then start it the same way
+$env:CLAUSESCOUT_CONFIG = "config/app-hybrid.yaml"     # the hybrid (needs Ollama)
+$env:CLAUSESCOUT_CONFIG = "config/app-keywords.yaml"   # keywords, no model
 ```
 
 Each contract gets its findings by clause type, with the quote highlighted in the text, the
@@ -254,7 +254,7 @@ web/                  React and TypeScript frontend
   scores keywords, QA and the hybrid with their CUAD validation thresholds, nothing retuned:
 
   ```powershell
-  set SEC_USER_AGENT=Your Name your.email@example.com
+  $env:SEC_USER_AGENT = "Your Name your.email@example.com"
   python scripts/fetch_singapore.py
   python scripts/label_tool.py
   python scripts/eval_singapore.py
