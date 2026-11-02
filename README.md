@@ -3,6 +3,12 @@
 A local-first contract review assistant for due diligence: it finds 41 kinds of clause, quotes
 each one word for word with its page, and flags risks against a playbook, all on your own machine.
 
+**Results at a glance** (102 CUAD test contracts, used once)
+- Fine-tuned DeBERTa-v3-small: high-stakes found F2 0.752, against 0.500 for keywords.
+- On validation it beat a local 7B LLM (qwen2.5:7b) by 0.38 found F2 (0.763 against 0.381).
+- The grounding check rejected 36.7% of the LLM's quotes for not being word for word in the contract, and none of the fine-tuned model's.
+- Trained in bf16 on a 6 GB laptop GPU; 103 pytest tests and GitHub Actions CI.
+
 ![Uploading one CUAD validation contract, stepping through its quotes and playbook flags](docs/demo.gif)
 
 *One CUAD validation contract through the selected hybrid. The wait while it runs (about 1.5
