@@ -169,6 +169,20 @@ pip install -e . --no-deps
 cd web; npm ci; npm run build; cd ..
 ```
 
+On macOS or Linux (I haven't tested these commands):
+
+```bash
+git clone https://github.com/Lagatorase/clausescout
+cd clausescout
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e . --no-deps
+
+# Frontend
+cd web && npm ci && npm run build && cd ..
+```
+
 No training is needed to use the app. The fine-tuned QA model is published on Hugging Face
 ([model card](https://huggingface.co/Lagatorase/clausescout-deberta-v3-small-cuad)).
 On the first run, if `models/qa-small-e4-s0` has no model, the app downloads it (about 570 MB)
@@ -203,6 +217,13 @@ uvicorn api.main:app --host 127.0.0.1 --port 8000
 # Or choose another config first, then start it the same way
 $env:CLAUSESCOUT_CONFIG = "config/app-hybrid.yaml"     # the hybrid (needs Ollama)
 $env:CLAUSESCOUT_CONFIG = "config/app-keywords.yaml"   # keywords, no model
+```
+
+On macOS or Linux (not tested), set the config with `export` instead:
+
+```bash
+export CLAUSESCOUT_CONFIG=config/app-hybrid.yaml     # the hybrid (needs Ollama)
+export CLAUSESCOUT_CONFIG=config/app-keywords.yaml   # keywords, no model
 ```
 
 Each contract gets its findings by clause type, with the quote highlighted in the text, the
@@ -274,6 +295,9 @@ web/                  React and TypeScript frontend
   python scripts/label_tool.py
   python scripts/eval_singapore.py
   ```
+
+  On macOS or Linux (not tested), the first line is
+  `export SEC_USER_AGENT="Your Name your.email@example.com"`.
 
   There are no Singapore results yet.
 - **Scanned PDFs need OCR first.** The app warns when a PDF has almost no text.
