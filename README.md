@@ -1,5 +1,14 @@
 # ClauseScout
 
+[![CI](https://github.com/Lagatorase/clausescout/actions/workflows/ci.yml/badge.svg)](https://github.com/Lagatorase/clausescout/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/Lagatorase/clausescout)](LICENSE)
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-DeBERTa--v3-EE4C2C?logo=pytorch&logoColor=white)
+[![Hugging Face model](https://img.shields.io/badge/Hugging%20Face-model-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/Lagatorase/clausescout-deberta-v3-small-cuad)
+![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-TypeScript-61DAFB?logo=react&logoColor=black)
+![Data: CUAD](https://img.shields.io/badge/data-CUAD%20(CC%20BY%204.0)-lightgrey)
+
 A local-first contract review assistant for due diligence: it finds 41 kinds of clause, quotes
 each one word for word with its page, and flags risks against a playbook, all on your own machine.
 
