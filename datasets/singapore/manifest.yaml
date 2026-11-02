@@ -5,7 +5,8 @@
 # and left out legal opinions, employment letters, guarantees and trust deeds. Filing details
 # are from the search index; the accession number identifies each filing.
 # scripts/fetch_singapore.py downloads them. Nothing here is labelled: labels go in
-# datasets/singapore/labels/, made by hand with scripts/label_tool.py.
+# datasets/singapore/labels/, made by hand with scripts/label_tool.py (11 clause types per
+# contract, see clausescout/data/singapore.py), and scripts/eval_singapore.py scores them.
 
 contracts:
   - id: republic-power-software-dev

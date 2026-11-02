@@ -71,3 +71,68 @@ def test_label_server_round_trip(tmp_path):
         assert span["text"] == "Governed by the laws of Singapore"
     finally:
         server.shutdown()
+
+
+def test_label_tool_asks_only_for_the_11_types():
+    from clausescout.data.cuad import HIGH_STAKES
+    from clausescout.data.singapore import GUIDANCE, LABEL_TYPES
+
+    assert LABEL_TYPES[:8] == HIGH_STAKES and len(LABEL_TYPES) == 11
+    assert LABEL_TYPES[8:] == ["Arbitration", "SIAC Arbitration", "Data Protection"]
+    assert set(GUIDANCE) == set(LABEL_TYPES)
+    tool = _load("label_tool")
+    text = "Governed by the laws of Singapore."
+    saved = tool.validate("c", {"labels": {
+        # A CUAD type outside the 11 is dropped, and an absent type never keeps quotes.
+        "Parties": {"status": "present", "spans": [{"start": 0, "end": 8}]},
+        "Arbitration": {"status": "absent", "spans": [{"start": 0, "end": 8}]},
+        "Data Protection": {"status": "absent"},
+    }}, text)
+    assert saved["labels"] == {"Arbitration": {"status": "absent", "spans": []},
+                               "Data Protection": {"status": "absent", "spans": []}}
+
+
+def test_label_tool_stays_blind():
+    # The tool never loads a model or reads any method's output.
+    source = (ROOT / "scripts" / "label_tool.py").read_text(encoding="utf-8")
+    for banned in ("extraction", "models", "findings", "runs", "experiments", "pipeline"):
+        assert banned not in source.split('PAGE = """')[0].replace("datasets/singapore", "")
+
+
+def test_label_server_progress_and_resume(tmp_path):
+    import json
+    import threading
+    import urllib.request
+    from http.server import ThreadingHTTPServer
+
+    tool = _load("label_tool")
+    ids = tool.contract_ids()
+    tool.TEXT_DIR, tool.LABEL_DIR = tmp_path / "text", tmp_path / "labels"
+    tool.TEXT_DIR.mkdir()
+    (tool.TEXT_DIR / f"{ids[1]}.txt").write_text("No arbitration here.", "utf-8")
+    server = ThreadingHTTPServer(("127.0.0.1", 0), tool.Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{server.server_port}"
+
+    def post(labels):
+        body = json.dumps({"labeller": "me", "labels": labels}).encode()
+        req = urllib.request.Request(f"{base}/api/contracts/{ids[1]}", body, method="POST")
+        return json.loads(urllib.request.urlopen(req).read())
+
+    try:
+        listing = json.loads(urllib.request.urlopen(base + "/api/contracts").read())
+        assert len(listing["types"]) == 11 and len(listing["contracts"]) == len(ids)
+        assert [c["fetched"] for c in listing["contracts"][:2]] == [False, True]
+        page = urllib.request.urlopen(base + "/").read().decode()
+        assert "Contract ${x} of ${contracts.length}" in page and "of ${types.length}" in page
+        # Each click is its own save, so stopping after one keeps it.
+        assert post({"Arbitration": {"status": "absent"}})["decided"] == 1
+        assert (tool.LABEL_DIR / f"{ids[1]}.json").exists()
+        listing = json.loads(urllib.request.urlopen(base + "/api/contracts").read())
+        assert listing["contracts"][1]["decided"] == 1
+        # Coming back later picks up the saved decisions.
+        back = json.loads(urllib.request.urlopen(f"{base}/api/contracts/{ids[1]}").read())
+        assert back["labels"] == {"Arbitration": {"status": "absent", "spans": []}}
+        assert back["labeller"] == "me"
+    finally:
+        server.shutdown()
